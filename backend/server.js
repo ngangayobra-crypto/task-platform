@@ -12,7 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const JWT_SECRET = "dev_secret_change_me"; // change in production
+const JWT_SECRET = process.env.JWT_SECRET; // change in production
 
 // --- Files ---
 const uploadsDir = path.join(__dirname, "uploads");
