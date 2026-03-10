@@ -1,7 +1,7 @@
 import "./App.css";
 import { useEffect, useState } from "react";
 
-const API = "http://localhost:4000";
+const API = "https://task-platform-api.onrender.com";
 
 async function apiFetch(token, path, options = {}) {
   const headers = { ...(options.headers || {}) };
