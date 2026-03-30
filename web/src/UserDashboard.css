@@ -1,0 +1,585 @@
+/* ── UserDashboard.css ──────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+/* ── Root & phone ──────────────────────────────────────────────────────────── */
+.ud-root {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(124,58,237,.15), transparent),
+    #09090f;
+  padding: 24px 16px;
+  font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+.ud-phone {
+  width: 100%;
+  max-width: 390px;
+  height: 820px;
+  background: #111118;
+  border-radius: 40px;
+  border: 1px solid rgba(255,255,255,.07);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    0 0 0 1px rgba(124,58,237,.1),
+    0 40px 80px rgba(0,0,0,.6);
+}
+
+/* ── Status bar ────────────────────────────────────────────────────────────── */
+.ud-statusbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 22px 0;
+  flex-shrink: 0;
+}
+.ud-time {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,.7);
+  letter-spacing: -.02em;
+}
+.ud-status-icons { color: rgba(255,255,255,.5); }
+
+/* ── Top nav ───────────────────────────────────────────────────────────────── */
+.ud-topnav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 22px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  flex-shrink: 0;
+}
+.ud-topnav-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: rgba(255,255,255,.9);
+  letter-spacing: -.03em;
+}
+.ud-topnav-right { display: flex; align-items: center; gap: 12px; }
+.ud-notif-badge {
+  position: relative;
+  color: rgba(255,255,255,.5);
+  display: flex;
+  align-items: center;
+}
+.ud-notif-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #7c3aed;
+  border: 1.5px solid #111118;
+}
+
+/* ── Notification bar ──────────────────────────────────────────────────────── */
+.ud-notif {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  flex-shrink: 0;
+  animation: ud-slide-in .25s ease;
+}
+@keyframes ud-slide-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ud-notif-info    { background: rgba(124,58,237,.12); color: #c4b5fd; border-bottom: 1px solid rgba(124,58,237,.2); }
+.ud-notif-success { background: rgba(34,197,94,.08);  color: #4ade80; border-bottom: 1px solid rgba(34,197,94,.2); }
+.ud-notif-warn    { background: rgba(239,68,68,.08);  color: #fca5a5; border-bottom: 1px solid rgba(239,68,68,.2); }
+.ud-notif-text { flex: 1; line-height: 1.4; }
+.ud-notif-close {
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: .6;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Scrollable body ───────────────────────────────────────────────────────── */
+.ud-body {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.ud-body::-webkit-scrollbar { display: none; }
+
+.ud-tab-content {
+  padding: 16px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Bottom nav ────────────────────────────────────────────────────────────── */
+.ud-bottomnav {
+  display: flex;
+  border-top: 1px solid rgba(255,255,255,.06);
+  padding: 8px 0 12px;
+  flex-shrink: 0;
+}
+.ud-tabbtn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255,255,255,.3);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 500;
+  position: relative;
+  padding: 6px 0;
+  transition: color .15s;
+}
+.ud-tabbtn.active { color: #a78bfa; }
+.ud-tabbtn-label { font-size: 10px; }
+.ud-tabbtn-indicator {
+  position: absolute;
+  bottom: -8px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #7c3aed;
+}
+
+/* ── Greeting ──────────────────────────────────────────────────────────────── */
+.ud-greeting {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+}
+.ud-greeting-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(255,255,255,.9);
+  letter-spacing: -.03em;
+}
+.ud-greeting-sub { font-size: 13px; color: rgba(255,255,255,.3); }
+
+/* ── Wallet card ───────────────────────────────────────────────────────────── */
+.ud-wallet-card {
+  background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #9b60f5 100%);
+  border-radius: 20px;
+  padding: 18px;
+}
+.ud-wallet-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+.ud-wallet-label { font-size: 11px; color: rgba(255,255,255,.6); margin-bottom: 4px; letter-spacing: .03em; }
+.ud-wallet-amount { font-size: 30px; font-weight: 600; color: white; letter-spacing: -.04em; }
+.ud-wallet-btn {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px solid rgba(255,255,255,.3);
+  background: rgba(255,255,255,.12);
+  color: rgba(255,255,255,.6);
+  cursor: not-allowed;
+  transition: all .15s;
+}
+.ud-wallet-btn-active {
+  background: rgba(255,255,255,.25);
+  color: white;
+  cursor: pointer;
+  border-color: rgba(255,255,255,.5);
+}
+.ud-wallet-btn-active:hover { background: rgba(255,255,255,.35); }
+.ud-wallet-progress-bg {
+  height: 5px;
+  background: rgba(255,255,255,.2);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 7px;
+}
+.ud-wallet-progress-fill {
+  height: 100%;
+  background: white;
+  border-radius: 999px;
+  transition: width .4s ease;
+}
+.ud-wallet-progress-label { font-size: 11px; color: rgba(255,255,255,.65); }
+
+/* ── Stats row ─────────────────────────────────────────────────────────────── */
+.ud-stats-row {
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 16px;
+  padding: 14px 0;
+}
+.ud-stat {
+  flex: 1;
+  text-align: center;
+}
+.ud-stat-num {
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(255,255,255,.9);
+  letter-spacing: -.03em;
+}
+.ud-stat-lbl { font-size: 10px; color: rgba(255,255,255,.3); margin-top: 2px; letter-spacing: .03em; }
+.ud-stat-divider { width: 1px; height: 32px; background: rgba(255,255,255,.07); flex-shrink: 0; }
+
+/* ── Section ───────────────────────────────────────────────────────────────── */
+.ud-section { display: flex; flex-direction: column; gap: 8px; }
+.ud-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.ud-section-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.6); letter-spacing: .02em; text-transform: uppercase; font-size: 11px; }
+.ud-section-sub { font-size: 13px; font-weight: 600; color: #a78bfa; }
+.ud-text-btn {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 12px;
+  color: #a78bfa;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* ── Task card ─────────────────────────────────────────────────────────────── */
+.ud-task-card {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ud-task-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ud-task-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,.9);
+  flex: 1;
+  line-height: 1.3;
+}
+.ud-task-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: rgba(255,255,255,.3);
+}
+.ud-task-time {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: rgba(255,255,255,.35);
+}
+.ud-task-desc {
+  font-size: 12px;
+  color: rgba(255,255,255,.35);
+  line-height: 1.5;
+  margin: 0;
+}
+.ud-task-feedback {
+  font-size: 12px;
+  color: #fca5a5;
+  background: rgba(239,68,68,.08);
+  border: 1px solid rgba(239,68,68,.2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  line-height: 1.5;
+}
+.ud-task-feedback-label { font-weight: 600; }
+.ud-task-waiting { font-size: 12px; color: rgba(255,255,255,.3); font-style: italic; }
+.ud-task-done { font-size: 12px; color: #4ade80; font-weight: 500; }
+
+/* ── Pills ─────────────────────────────────────────────────────────────────── */
+.ud-pill {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ud-pill-pending { background: rgba(251,191,36,.1);  color: #fbbf24; border: 1px solid rgba(251,191,36,.2); }
+.ud-pill-active  { background: rgba(34,197,94,.1);   color: #4ade80; border: 1px solid rgba(34,197,94,.2);  }
+.ud-pill-review  { background: rgba(124,58,237,.12); color: #a78bfa; border: 1px solid rgba(124,58,237,.25); }
+.ud-pill-done    { background: rgba(59,130,246,.1);  color: #60a5fa; border: 1px solid rgba(59,130,246,.2); }
+.ud-pill-earn    { background: rgba(34,197,94,.1);   color: #4ade80; border: 1px solid rgba(34,197,94,.2); font-family: 'DM Mono', monospace; }
+
+/* ── Buttons ───────────────────────────────────────────────────────────────── */
+.ud-btn-primary {
+  padding: 12px 16px;
+  background: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background .15s, transform .1s;
+}
+.ud-btn-primary:hover:not(:disabled) { background: #6d28d9; }
+.ud-btn-primary:active:not(:disabled) { transform: scale(.98); }
+.ud-btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+
+.ud-btn-sm { padding: 9px 12px; font-size: 13px; border-radius: 10px; }
+
+.ud-btn-ghost {
+  padding: 12px 16px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  color: rgba(255,255,255,.6);
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ud-btn-danger {
+  width: 100%;
+  padding: 13px;
+  background: rgba(239,68,68,.08);
+  border: 1px solid rgba(239,68,68,.2);
+  color: #fca5a5;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background .15s;
+}
+.ud-btn-danger:hover { background: rgba(239,68,68,.14); }
+
+/* ── Onboarding card ───────────────────────────────────────────────────────── */
+.ud-onboarding {
+  background: rgba(124,58,237,.08);
+  border: 1px solid rgba(124,58,237,.2);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+.ud-onboarding-emoji { font-size: 32px; line-height: 1; }
+.ud-onboarding-title { font-size: 16px; font-weight: 600; color: rgba(255,255,255,.9); letter-spacing: -.02em; margin: 0; }
+.ud-onboarding-body  { font-size: 13px; color: rgba(255,255,255,.45); line-height: 1.6; margin: 0; }
+.ud-onboarding-dots  { display: flex; gap: 6px; }
+.ud-onboarding-dot   { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.15); transition: background .2s; }
+.ud-onboarding-dot.active { background: #7c3aed; }
+.ud-onboarding-actions { display: flex; gap: 8px; width: 100%; }
+.ud-onboarding-actions .ud-btn-primary { flex: 1; }
+.ud-onboarding-actions .ud-btn-ghost   { flex: 0 0 auto; }
+
+/* ── Sub-tabs ──────────────────────────────────────────────────────────────── */
+.ud-subtabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 12px;
+  padding: 3px;
+}
+.ud-subtab {
+  flex: 1;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,.35);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all .15s;
+}
+.ud-subtab.active {
+  background: rgba(124,58,237,.4);
+  color: rgba(255,255,255,.9);
+}
+.ud-subtab-badge {
+  font-size: 10px;
+  background: rgba(255,255,255,.12);
+  padding: 1px 5px;
+  border-radius: 999px;
+}
+
+/* ── Search & filter ───────────────────────────────────────────────────────── */
+.ud-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: rgba(255,255,255,.3);
+}
+.ud-search {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: rgba(255,255,255,.85);
+}
+.ud-search::placeholder { color: rgba(255,255,255,.2); }
+.ud-search-clear { background: none; border: none; color: rgba(255,255,255,.3); cursor: pointer; display: flex; align-items: center; }
+
+.ud-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.ud-filter-label { font-size: 11px; color: rgba(255,255,255,.3); }
+.ud-chip {
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: transparent;
+  color: rgba(255,255,255,.4);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+}
+.ud-chip.active {
+  background: rgba(124,58,237,.25);
+  border-color: rgba(124,58,237,.5);
+  color: #c4b5fd;
+}
+.ud-chip-clear {
+  font-size: 11px;
+  color: rgba(255,255,255,.3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: underline;
+}
+
+/* ── Empty state ───────────────────────────────────────────────────────────── */
+.ud-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 16px;
+  gap: 6px;
+}
+.ud-empty-icon { font-size: 36px; line-height: 1; margin-bottom: 4px; }
+.ud-empty-text { font-size: 15px; font-weight: 600; color: rgba(255,255,255,.5); }
+.ud-empty-sub  { font-size: 12px; color: rgba(255,255,255,.25); line-height: 1.5; }
+
+/* ── Earnings ──────────────────────────────────────────────────────────────── */
+.ud-earnings-list {
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.ud-earnings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.ud-earnings-task { font-size: 13px; font-weight: 500; color: rgba(255,255,255,.75); }
+.ud-earnings-date { font-size: 11px; color: rgba(255,255,255,.3); margin-top: 2px; }
+.ud-earnings-amount { font-size: 13px; font-weight: 600; color: #4ade80; font-family: 'DM Mono', monospace; }
+.ud-earnings-total {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,.5);
+}
+.ud-earnings-total span:last-child { color: #a78bfa; font-family: 'DM Mono', monospace; }
+
+/* ── Profile ───────────────────────────────────────────────────────────────── */
+.ud-profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+  gap: 6px;
+}
+.ud-profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 4px;
+}
+.ud-profile-name  { font-size: 18px; font-weight: 600; color: rgba(255,255,255,.9); letter-spacing: -.02em; }
+.ud-profile-email { font-size: 13px; color: rgba(255,255,255,.35); }
+.ud-profile-stats {
+  display: flex;
+  gap: 12px;
+}
+.ud-pstat {
+  flex: 1;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 14px;
+  padding: 14px;
+  text-align: center;
+}
+.ud-pstat-num { font-size: 22px; font-weight: 600; color: #a78bfa; letter-spacing: -.03em; }
+.ud-pstat-lbl { font-size: 11px; color: rgba(255,255,255,.3); margin-top: 3px; }
+
+/* ── Full screen on small devices ──────────────────────────────────────────── */
+@media (max-width: 420px) {
+  .ud-root { padding: 0; align-items: stretch; }
+  .ud-phone { border-radius: 0; height: 100dvh; box-shadow: none; }
+}

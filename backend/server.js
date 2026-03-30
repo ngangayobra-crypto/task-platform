@@ -45,10 +45,12 @@ CREATE TABLE IF NOT EXISTS tasks (
   title TEXT NOT NULL,
   description TEXT NOT NULL,
   due_date TEXT,
+  estimated_minutes INTEGER,
   created_by INTEGER NOT NULL,
   status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','closed')),
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY(created_by) REFERENCES users(id)
+  
 );
 
 CREATE TABLE IF NOT EXISTS assignments (
@@ -781,6 +783,25 @@ app.get("/admin/tasks-overview", authRequired, requireRole("admin"), (req, res) 
   `).all();
 
   return res.json(rows);
+});
+
+// Add this to server.js — REMOVE IT after you've created your account
+app.post("/setup/create-admin", async (req, res) => {
+  const { name, email, password, secret } = req.body;
+
+  // Change this secret to anything — prevents strangers from using the route
+  if (secret !== "MY_SETUP_SECRET") {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email.toLowerCase());
+  if (existing) return res.status(400).json({ error: "Email already exists" });
+
+  const hash = await bcrypt.hash(password, 10);
+  db.prepare("INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, 'admin')")
+    .run(name, email.toLowerCase(), hash, "admin");
+
+  res.json({ ok: true, message: "Admin created" });
 });
 
 
