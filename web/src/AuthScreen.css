@@ -3,24 +3,23 @@
 
 /* ── Root & phone frame ──────────────────────────────────────────────────── */
 .as-root {
-  min-height: 100dvh;
-  display: block; /* remove flex centering */
-  padding: 0;
+  min-height: 100vh;
+  background: #09090f; /* page background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
 }
 
 .as-phone {
   width: 100%;
-  max-width: none;
-  min-height: 100dvh;
+  max-width: 420px; /* keeps form readable */
+  min-height: auto;
   background: #111118;
-  border-radius: 0;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow:
-    0 0 0 1px rgba(124, 58, 237, 0.12),
-    0 40px 80px rgba(0, 0, 0, 0.6);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
 /* ── Status bar ─────────────────────────────────────────────────────────── */
