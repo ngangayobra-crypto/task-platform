@@ -4,22 +4,17 @@
 /* ── Root & phone frame ──────────────────────────────────────────────────── */
 .as-root {
   min-height: 100vh;
-  background: #09090f; /* page background */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
+  background: #111118;
+  padding: 0;
 }
 
 .as-phone {
   width: 100%;
-  max-width: 420px; /* keeps form readable */
-  min-height: auto;
-  background: #111118;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  padding-bottom: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  height: 100vh;
+  max-width: none;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
 }
 
 /* ── Status bar ─────────────────────────────────────────────────────────── */
