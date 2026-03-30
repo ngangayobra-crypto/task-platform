@@ -4,14 +4,8 @@
 /* ── Root & phone frame ──────────────────────────────────────────────────── */
 .as-root {
   min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(124, 58, 237, 0.18), transparent),
-    #09090f;
-  padding: 24px 16px;
-  font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  display: block; /* remove flex centering */
+  padding: 0;
 }
 
 .as-phone {
