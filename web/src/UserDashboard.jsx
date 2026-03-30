@@ -628,7 +628,7 @@ useEffect(() => {
 
         {/* Status bar */}
         <div className="ud-statusbar">
-          <span className="ud-time">9:41</span>
+          
           <div className="ud-status-icons">
             <svg width="15" height="10" viewBox="0 0 15 10" fill="currentColor" opacity=".7">
               <rect x="0" y="4" width="3" height="6" rx=".5"/>
