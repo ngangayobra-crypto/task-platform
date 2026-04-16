@@ -149,10 +149,10 @@ function RegisterForm({ onSwitch }) {
       <div className="as-mpesa-section">
         <div className="as-mpesa-header">
           <span className="as-mpesa-label">Registration fee</span>
-          <span className="as-mpesa-amount">KES 150\-</span>
+          <span className="as-mpesa-amount">KES 250\-</span>
         </div>
         <div className="as-mpesa-instruction">
-          Send <strong>KES 150</strong> to pochi la biashara <strong>0111445540</strong><br/>
+          Send <strong>KES 250</strong><br/>
           then paste your confirmation code below.
         </div>
       </div>
