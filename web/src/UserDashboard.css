@@ -574,7 +574,7 @@
 .ud-pstat-lbl { font-size: 11px; color: rgba(255,255,255,.3); margin-top: 3px; }
 
 /* ── Full screen on small devices ──────────────────────────────────────────── */
-@media (max-width: 420px) {
+@media (max-width: none) {
   .ud-root { padding: 0; align-items: stretch; }
   .ud-phone { border-radius: 0; height: 100dvh; box-shadow: none; }
 }

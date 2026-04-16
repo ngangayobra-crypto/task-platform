@@ -179,7 +179,7 @@ hr.sep{
   font-size:14px;
   width:auto;
 }
-@media (max-width:700px){
+@media (max-width:none){
   .taskGrid{ grid-template-columns:1fr; }
 }
 
