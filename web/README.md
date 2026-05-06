@@ -1,16 +1,40 @@
-# React + Vite
+# TaskHive Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is now a web-only Vite + React app backed by Supabase for auth, data, and file storage.
 
-Currently, two official plugins are available:
+## Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1. Create a Supabase project.
+2. Open the Supabase SQL editor and run [supabase/schema.sql](/C:/Users/brayo/OneDrive/Desktop/task-platform/web/supabase/schema.sql).
+3. Copy `.env.example` to `.env.local` and fill in:
 
-## React Compiler
+```bash
+VITE_SUPABASE_URL=your-project-url
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+4. Install dependencies and start the site:
 
-## Expanding the ESLint configuration
+```bash
+npm install
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## First Admin
+
+Create the first auth user from the Supabase Auth dashboard, then promote that user in SQL:
+
+```sql
+update public.profiles
+set role = 'admin',
+    account_status = 'active'
+where id = 'AUTH_USER_UUID_HERE';
+```
+
+After that, sign in through the website and use the admin dashboard for the rest of the workflow.
+
+## Notes
+
+- New user signups create their Supabase auth account and the matching signup/payment rows automatically through a database trigger.
+- Submission uploads go to the private `submission-files` storage bucket defined in the schema.
+- The old Node/SQLite backend is no longer used by the website.
