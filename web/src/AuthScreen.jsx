@@ -209,8 +209,7 @@ function RegisterForm({ onRegister, onSwitch }) {
           <span className="as-mpesa-amount">KES {REGISTRATION_FEE}</span>
         </div>
         <div className="as-mpesa-instruction">
-          Pay the registration fee, then paste your M-Pesa confirmation code below so an admin can
-          approve the account.
+          Send ksh.250 to pochi la biashara 0111445540, then wait 25 minutes to login. 
         </div>
       </div>
 
@@ -233,7 +232,7 @@ function RegisterForm({ onRegister, onSwitch }) {
 
       <label className="as-agree">
         <input type="checkbox" required />
-        <span>I agree to the platform rules and confirm that the payment code is mine.</span>
+        <span>I agree to the platform rules.</span>
       </label>
 
       <Notice text={error} />
