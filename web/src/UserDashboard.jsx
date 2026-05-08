@@ -309,8 +309,8 @@ function PaymentGate({ me, paymentStatus, submitting, onSubmit, onLogout }) {
               <div className="ud-payment-kicker">Required before using the app</div>
               <h2 className="ud-payment-title">Submit your M-Pesa payment</h2>
               <p className="ud-payment-body">
-                Send KES {REGISTRATION_FEE} using M-Pesa, then submit the phone number and
-                confirmation code here. Once the payment is confirmed, the rest of the app unlocks.
+                  CONFIRM YOU ARE NOT A BOT !!  Send KES {REGISTRATION_FEE} to M-Pesa pochi 0111445540, then submit the phone number and
+                confirmation code here. Once the payment is confirmed, you can access the FULL WEBSITE.
               </p>
 
               {isPending ? (
