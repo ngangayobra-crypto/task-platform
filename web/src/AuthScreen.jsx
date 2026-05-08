@@ -92,6 +92,7 @@ function RegisterForm({ onRegister, onSwitch }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [successBody, setSuccessBody] = useState("Your account was created.");
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -101,7 +102,17 @@ function RegisterForm({ onRegister, onSwitch }) {
     const values = Object.fromEntries(new FormData(event.currentTarget).entries());
 
     try {
-      await onRegister(values);
+      const result = await onRegister(values);
+
+      if (result?.signedIn) {
+        return;
+      }
+
+      setSuccessBody(
+        result?.requiresEmailConfirmation
+          ? "Email confirmation is still enabled in Supabase, so this account cannot sign in yet. Turn off Confirm email in your Supabase auth settings if you want instant signup and login."
+          : "Your account was created. Sign in to continue and submit your M-Pesa payment details inside the app.",
+      );
       setSuccess(true);
     } catch (submitError) {
       setError(submitError.message);
@@ -126,9 +137,7 @@ function RegisterForm({ onRegister, onSwitch }) {
           </svg>
         </div>
         <h3 className="as-success-title">Account created</h3>
-        <p className="as-success-body">
-          Your account was created.
-        </p>
+        <p className="as-success-body">{successBody}</p>
         <button className="as-btn" type="button" onClick={onSwitch}>
           Back to sign in
         </button>

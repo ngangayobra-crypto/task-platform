@@ -3,8 +3,20 @@ import { supabase } from "./supabase";
 
 function messageFromError(error, fallback = "Something went wrong.") {
   if (!error) return fallback;
-  if (typeof error === "string") return error;
-  return error.message || error.error_description || fallback;
+  const rawMessage =
+    typeof error === "string" ? error : error.message || error.error_description || fallback;
+  const message = String(rawMessage);
+  const lower = message.toLowerCase();
+
+  if (lower.includes("email rate limit exceeded") || lower.includes("email rate exceeded")) {
+    return "Supabase already sent a confirmation email for this address. Check the inbox or spam folder for that email, or wait a bit before trying again.";
+  }
+
+  if (lower.includes("email not confirmed")) {
+    return "This account exists, but the email has not been confirmed yet. Open the confirmation email from Supabase, then sign in again.";
+  }
+
+  return message;
 }
 
 function throwIfError(error, fallback) {
@@ -19,6 +31,12 @@ function toInt(value) {
 
 function toMoney(value) {
   return value == null ? 0 : Number(value);
+}
+
+function delay(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
 }
 
 function mapAuthUser(user, profile) {
@@ -59,20 +77,26 @@ async function getRequiredAuthUser() {
   return user;
 }
 
-async function getCurrentProfile(userId) {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, name, phone, role, account_status")
-    .eq("id", userId)
-    .maybeSingle();
+async function getCurrentProfile(userId, retries = 0) {
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, name, phone, role, account_status")
+      .eq("id", userId)
+      .maybeSingle();
 
-  throwIfError(error, "Could not load your profile.");
+    throwIfError(error, "Could not load your profile.");
 
-  if (!data) {
-    throw new Error("Profile not found. Run the Supabase setup SQL before using the app.");
+    if (data) {
+      return data;
+    }
+
+    if (attempt < retries) {
+      await delay(250);
+    }
   }
 
-  return data;
+  throw new Error("Profile not found. Run the Supabase setup SQL before using the app.");
 }
 
 function normalizeAvailableTask(row) {
@@ -159,29 +183,34 @@ export function onAuthStateChange(handler) {
 }
 
 export async function getAuthenticatedUser(user) {
-  const profile = await getCurrentProfile(user.id);
+  const profile = await getCurrentProfile(user.id, 5);
   return mapAuthUser(user, profile);
 }
 
 export async function signUpUser({ name, email, phone, password }) {
+  const trimmedEmail = email.trim();
+  const trimmedName = name.trim();
+  const trimmedPhone = phone.trim();
   const { data, error } = await supabase.auth.signUp({
-    email,
+    email: trimmedEmail,
     password,
     options: {
+      emailRedirectTo: window.location.origin,
       data: {
-        name: name.trim(),
-        phone: phone.trim(),
+        name: trimmedName,
+        phone: trimmedPhone,
       },
     },
   });
 
   throwIfError(error, "Could not create your account.");
 
-  if (data.session) {
-    await supabase.auth.signOut({ scope: "local" });
-  }
-
-  return data;
+  return {
+    ...data,
+    email: trimmedEmail,
+    signedIn: Boolean(data.session && data.user),
+    requiresEmailConfirmation: !data.session,
+  };
 }
 
 export async function signInWithPassword({ email, password }) {

@@ -116,8 +116,15 @@ export default function App() {
   }
 
   async function handleRegister(values) {
-    await signUpUser(values);
+    const result = await signUpUser(values);
+
+    if (result.signedIn && result.user) {
+      const nextUser = await getAuthenticatedUser(result.user);
+      setMe(nextUser);
+    }
+
     setNotice("");
+    return result;
   }
 
   async function handleLogout() {
