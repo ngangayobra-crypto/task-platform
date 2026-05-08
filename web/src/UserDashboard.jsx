@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./UserDashboard.css";
-import { TASK_REWARD, WITHDRAW_MIN } from "./lib/constants";
+import { REGISTRATION_FEE, TASK_REWARD, WITHDRAW_MIN } from "./lib/constants";
 import {
   claimTask,
+  getMyPaymentStatus,
   getMyStats,
   listAvailableTasks,
   listMyTasks,
   requestWithdrawal,
   submitAssignment,
+  submitMyRegistrationPayment,
 } from "./lib/taskPlatform";
 
 const Icon = {
@@ -80,7 +82,6 @@ function OnboardingCard({ onDone }) {
       body: "Claim an available task, wait for approval if needed, upload your work, and watch your wallet grow after review.",
     },
   ];
-
   const current = steps[step];
   const isLast = step === steps.length - 1;
 
@@ -256,11 +257,130 @@ function EarningsHistory({ tasks }) {
   );
 }
 
+function PaymentGate({ me, paymentStatus, submitting, onSubmit, onLogout }) {
+  const [phone, setPhone] = useState(() => paymentStatus?.phone || me?.phone || "");
+  const [mpesaCode, setMpesaCode] = useState(() => paymentStatus?.mpesa_code || "");
+  const [localError, setLocalError] = useState("");
+
+  const status = paymentStatus?.payment_status || "missing";
+  const isRejected = status === "rejected";
+  const isPending = status === "pending";
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setLocalError("");
+
+    try {
+      await onSubmit({
+        phone,
+        mpesaCode,
+      });
+    } catch (error) {
+      setLocalError(error.message);
+    }
+  }
+
+  return (
+    <div className="ud-root">
+      <div className="ud-phone">
+        <div className="ud-statusbar">
+          <div className="ud-status-icons">
+            <svg width="15" height="10" viewBox="0 0 15 10" fill="currentColor" opacity=".7">
+              <rect x="0" y="4" width="3" height="6" rx=".5" />
+              <rect x="4" y="2.5" width="3" height="7.5" rx=".5" />
+              <rect x="8" y="1" width="3" height="9" rx=".5" />
+              <rect x="12" y="0" width="3" height="10" rx=".5" />
+            </svg>
+          </div>
+        </div>
+
+        <div className="ud-topnav">
+          <span className="ud-topnav-title">Complete setup</span>
+          <div className="ud-topnav-right">
+            <button className="ud-btn-ghost ud-btn-sm" onClick={() => void onLogout()}>
+              Sign out
+            </button>
+          </div>
+        </div>
+
+        <div className="ud-body">
+          <div className="ud-payment-shell">
+            <div className="ud-payment-card">
+              <div className="ud-payment-kicker">Required before using the app</div>
+              <h2 className="ud-payment-title">Submit your M-Pesa payment</h2>
+              <p className="ud-payment-body">
+                Send KES {REGISTRATION_FEE} using M-Pesa, then submit the phone number and
+                confirmation code here. Once the payment is confirmed, the rest of the app unlocks.
+              </p>
+
+              {isPending ? (
+                <div className="ud-payment-status ud-payment-status-pending">
+                  Payment submitted and waiting for admin confirmation.
+                </div>
+              ) : null}
+
+              {isRejected ? (
+                <div className="ud-payment-status ud-payment-status-rejected">
+                  Payment was rejected{paymentStatus?.admin_note ? `: ${paymentStatus.admin_note}` : "."}
+                </div>
+              ) : null}
+
+              {localError ? (
+                <div className="ud-payment-status ud-payment-status-rejected">{localError}</div>
+              ) : null}
+
+              <form className="ud-payment-form" onSubmit={handleSubmit}>
+                <label className="ud-payment-label" htmlFor="payment-phone">
+                  M-Pesa phone number
+                </label>
+                <input
+                  id="payment-phone"
+                  className="ud-payment-input"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  placeholder="07xxxxxxxx"
+                  required
+                />
+
+                <label className="ud-payment-label" htmlFor="payment-code">
+                  M-Pesa confirmation code
+                </label>
+                <input
+                  id="payment-code"
+                  className="ud-payment-input ud-payment-input-mono"
+                  value={mpesaCode}
+                  onChange={(event) => setMpesaCode(event.target.value.toUpperCase().replace(/\s/g, ""))}
+                  placeholder="QJK3H8YT92"
+                  minLength={8}
+                  maxLength={20}
+                  required
+                />
+
+                <button className="ud-btn-primary" type="submit" disabled={submitting}>
+                  {submitting
+                    ? "Saving payment..."
+                    : isPending
+                      ? "Update payment details"
+                      : isRejected
+                        ? "Resubmit payment"
+                        : "Submit payment"}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function UserDashboard({ me, onLogout }) {
   const [tab, setTab] = useState("home");
   const [taskTab, setTaskTab] = useState("available");
   const [myTasks, setMyTasks] = useState([]);
   const [available, setAvailable] = useState([]);
+  const [paymentStatus, setPaymentStatus] = useState(null);
+  const [submittingPayment, setSubmittingPayment] = useState(false);
   const [stats, setStats] = useState({
     claimed: 0,
     approved_to_start: 0,
@@ -279,7 +399,6 @@ export default function UserDashboard({ me, onLogout }) {
   const addNotification = useCallback((message, type = "info") => {
     const id = notificationId.current + 1;
     notificationId.current = id;
-
     setNotifications((current) => [{ id, message, type }, ...current].slice(0, 5));
     window.setTimeout(() => {
       setNotifications((current) => current.filter((item) => item.id !== id));
@@ -322,6 +441,19 @@ export default function UserDashboard({ me, onLogout }) {
     [addNotification],
   );
 
+  const loadPaymentStatus = useCallback(async () => {
+    try {
+      const nextStatus = await getMyPaymentStatus();
+      setPaymentStatus(nextStatus);
+      return nextStatus;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }, []);
+
+  const paymentConfirmed = paymentStatus?.payment_status === "confirmed";
+
   const loadMyTasks = useCallback(async () => {
     try {
       const rows = await listMyTasks();
@@ -353,6 +485,37 @@ export default function UserDashboard({ me, onLogout }) {
   }, []);
 
   useEffect(() => {
+    void loadPaymentStatus();
+  }, [loadPaymentStatus]);
+
+  useEffect(() => {
+    if (paymentConfirmed) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      void loadPaymentStatus();
+    }, 10000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [loadPaymentStatus, paymentConfirmed]);
+
+  useEffect(() => {
+    if (!paymentConfirmed) {
+      setMyTasks([]);
+      setAvailable([]);
+      setStats({
+        claimed: 0,
+        approved_to_start: 0,
+        completed: 0,
+        balance: 0,
+      });
+      setTasksLoaded(false);
+      return undefined;
+    }
+
     void loadMyTasks();
     void loadAvailable();
     void loadStats();
@@ -365,16 +528,33 @@ export default function UserDashboard({ me, onLogout }) {
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [loadAvailable, loadMyTasks, loadStats]);
+  }, [loadAvailable, loadMyTasks, loadStats, paymentConfirmed]);
 
   useEffect(() => {
-    if (tasksLoaded && myTasks.length === 0 && available.length >= 0) {
+    if (paymentConfirmed && tasksLoaded && myTasks.length === 0 && available.length >= 0) {
       const seen = window.localStorage.getItem("th_onboarding_done");
       if (!seen) {
         setShowOnboarding(true);
       }
     }
-  }, [available.length, myTasks.length, tasksLoaded]);
+  }, [available.length, myTasks.length, paymentConfirmed, tasksLoaded]);
+
+  async function handlePaymentSubmit(values) {
+    setSubmittingPayment(true);
+
+    try {
+      await submitMyRegistrationPayment(values);
+      const nextStatus = await loadPaymentStatus();
+
+      if (nextStatus?.payment_status === "confirmed") {
+        addNotification("Payment confirmed. The app is now unlocked.", "success");
+      } else {
+        addNotification("Payment details submitted. Waiting for admin confirmation.", "info");
+      }
+    } finally {
+      setSubmittingPayment(false);
+    }
+  }
 
   async function handleClaimTask(taskId) {
     setClaimingIds((current) => ({ ...current, [taskId]: true }));
@@ -426,6 +606,19 @@ export default function UserDashboard({ me, onLogout }) {
     setShowOnboarding(false);
     setTab("tasks");
     setTaskTab("available");
+  }
+
+  if (!paymentConfirmed) {
+    return (
+      <PaymentGate
+        key={`${paymentStatus?.id || "new"}:${paymentStatus?.updated_at || paymentStatus?.created_at || me?.id || "user"}`}
+        me={me}
+        paymentStatus={paymentStatus}
+        submitting={submittingPayment}
+        onSubmit={handlePaymentSubmit}
+        onLogout={onLogout}
+      />
+    );
   }
 
   const myTaskIds = new Set(myTasks.map((task) => task.task_id));
@@ -610,7 +803,10 @@ export default function UserDashboard({ me, onLogout }) {
         <div className="ud-section">
           <div className="ud-section-header">
             <span className="ud-section-title">Earnings history</span>
-            <span className="ud-section-sub">${(myTasks.filter((task) => task.state === "completed").length * TASK_REWARD).toFixed(2)} total</span>
+            <span className="ud-section-sub">
+              $
+              {(myTasks.filter((task) => task.state === "completed").length * TASK_REWARD).toFixed(2)} total
+            </span>
           </div>
           <EarningsHistory tasks={myTasks} />
         </div>

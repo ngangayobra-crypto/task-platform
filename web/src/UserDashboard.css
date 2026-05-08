@@ -379,6 +379,95 @@
 }
 .ud-btn-danger:hover { background: rgba(239,68,68,.14); }
 
+.ud-payment-shell {
+  min-height: calc(100vh - 96px);
+  display: grid;
+  place-items: center;
+  padding: 24px 16px 32px;
+}
+
+.ud-payment-card {
+  width: min(100%, 460px);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 24px;
+  padding: 24px;
+  display: grid;
+  gap: 14px;
+}
+
+.ud-payment-kicker {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: rgba(255,255,255,.35);
+}
+
+.ud-payment-title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.1;
+  letter-spacing: -.04em;
+  color: rgba(255,255,255,.94);
+}
+
+.ud-payment-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255,255,255,.5);
+}
+
+.ud-payment-status {
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ud-payment-status-pending {
+  background: rgba(251,191,36,.08);
+  border: 1px solid rgba(251,191,36,.2);
+  color: #fbbf24;
+}
+
+.ud-payment-status-rejected {
+  background: rgba(239,68,68,.08);
+  border: 1px solid rgba(239,68,68,.2);
+  color: #fca5a5;
+}
+
+.ud-payment-form {
+  display: grid;
+  gap: 10px;
+}
+
+.ud-payment-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: rgba(255,255,255,.36);
+}
+
+.ud-payment-input {
+  width: 100%;
+  padding: 13px 14px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 14px;
+  color: rgba(255,255,255,.9);
+  outline: none;
+}
+
+.ud-payment-input:focus {
+  border-color: rgba(124,58,237,.6);
+}
+
+.ud-payment-input-mono {
+  font-family: 'DM Mono', monospace;
+  letter-spacing: .06em;
+}
+
 /* ── Onboarding card ───────────────────────────────────────────────────────── */
 .ud-onboarding {
   background: rgba(124,58,237,.08);

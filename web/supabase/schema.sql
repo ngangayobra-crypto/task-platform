@@ -7,7 +7,7 @@ create table if not exists public.profiles (
   name text not null default '',
   phone text,
   role text not null default 'user' check (role in ('admin', 'user')),
-  account_status text not null default 'pending' check (account_status in ('pending', 'active', 'rejected')),
+  account_status text not null default 'active' check (account_status in ('pending', 'active', 'rejected')),
   created_at timestamptz not null default now()
 );
 
@@ -106,28 +106,33 @@ as $$
   );
 $$;
 
+create or replace function public.has_confirmed_payment(check_user uuid default auth.uid())
+returns boolean
+language sql
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.registration_payments rp
+    where rp.user_id = check_user
+      and rp.status = 'confirmed'
+  );
+$$;
+
 create or replace function public.handle_new_auth_user()
 returns trigger
 language plpgsql
 security definer
 set search_path = public
 as $$
-declare
-  signup_name text;
-  signup_phone text;
-  signup_channel text;
-  signup_code text;
-  signup_amount double precision;
-  signup_request_id integer;
 begin
-  signup_name := coalesce(new.raw_user_meta_data ->> 'name', '');
-  signup_phone := nullif(trim(coalesce(new.raw_user_meta_data ->> 'phone', '')), '');
-  signup_channel := coalesce(nullif(new.raw_user_meta_data ->> 'channel', ''), 'sms');
-  signup_code := nullif(upper(trim(coalesce(new.raw_user_meta_data ->> 'mpesa_code', ''))), '');
-  signup_amount := coalesce(nullif(new.raw_user_meta_data ->> 'amount', '')::double precision, 250);
-
   insert into public.profiles (id, name, phone)
-  values (new.id, signup_name, signup_phone)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data ->> 'name', ''),
+    nullif(trim(coalesce(new.raw_user_meta_data ->> 'phone', '')), '')
+  )
   on conflict (id) do update
     set name = excluded.name,
         phone = coalesce(excluded.phone, public.profiles.phone);
@@ -135,28 +140,6 @@ begin
   insert into public.wallets (user_id)
   values (new.id)
   on conflict (user_id) do nothing;
-
-  if signup_name <> '' and signup_phone is not null and signup_code is not null then
-    insert into public.signup_requests (user_id, email, name, phone, channel, status)
-    values (new.id, coalesce(new.email, ''), signup_name, signup_phone, signup_channel, 'pending')
-    on conflict (user_id) do update
-      set email = excluded.email,
-          name = excluded.name,
-          phone = excluded.phone,
-          channel = excluded.channel,
-          status = 'pending'
-    returning id into signup_request_id;
-
-    insert into public.registration_payments (signup_request_id, user_id, phone, amount, mpesa_code, status, admin_note, confirmed_at)
-    values (signup_request_id, new.id, signup_phone, signup_amount, signup_code, 'pending', null, null)
-    on conflict (signup_request_id) do update
-      set phone = excluded.phone,
-          amount = excluded.amount,
-          mpesa_code = excluded.mpesa_code,
-          status = 'pending',
-          admin_note = null,
-          confirmed_at = null;
-  end if;
 
   return new;
 end;
@@ -217,7 +200,7 @@ create policy "tasks_select_open"
   on public.tasks
   for select
   to authenticated
-  using (public.is_active_user() and status = 'open');
+  using (public.is_active_user() and public.has_confirmed_payment() and status = 'open');
 
 drop policy if exists "assignments_select_self" on public.assignments;
 create policy "assignments_select_self"
@@ -324,6 +307,7 @@ as $$
     t.created_at
   from public.tasks t
   where public.is_active_user()
+    and public.has_confirmed_payment()
     and t.status = 'open'
     and not exists (
       select 1
@@ -331,6 +315,126 @@ as $$
       where a.task_id = t.id
     )
   order by t.created_at desc;
+$$;
+
+create or replace function public.get_my_payment_status()
+returns table (
+  payment_id integer,
+  phone text,
+  amount double precision,
+  mpesa_code text,
+  payment_status text,
+  admin_note text,
+  submitted_at timestamptz,
+  confirmed_at timestamptz
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    rp.id as payment_id,
+    rp.phone,
+    rp.amount,
+    rp.mpesa_code,
+    rp.status as payment_status,
+    rp.admin_note,
+    rp.created_at as submitted_at,
+    rp.confirmed_at
+  from public.registration_payments rp
+  where rp.user_id = (select auth.uid())
+  order by rp.created_at desc
+  limit 1;
+$$;
+
+create or replace function public.submit_my_registration_payment(
+  p_phone text,
+  p_mpesa_code text,
+  p_amount double precision default 250,
+  p_channel text default 'sms'
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid;
+  current_name text;
+  current_email text;
+  signup_request_id integer;
+  existing_status text;
+begin
+  current_user_id := (select auth.uid());
+
+  if current_user_id is null then
+    raise exception 'You must be signed in.';
+  end if;
+
+  if trim(coalesce(p_phone, '')) = '' then
+    raise exception 'Phone number is required.';
+  end if;
+
+  if length(trim(coalesce(p_mpesa_code, ''))) < 8 then
+    raise exception 'M-Pesa confirmation code is too short.';
+  end if;
+
+  select p.name, u.email
+  into current_name, current_email
+  from public.profiles p
+  join auth.users u on u.id = p.id
+  where p.id = current_user_id;
+
+  if current_name is null then
+    raise exception 'Profile not found.';
+  end if;
+
+  select rp.status
+  into existing_status
+  from public.registration_payments rp
+  where rp.user_id = current_user_id
+  order by rp.created_at desc
+  limit 1;
+
+  if existing_status = 'confirmed' then
+    raise exception 'Payment is already confirmed.';
+  end if;
+
+  insert into public.signup_requests (user_id, email, name, phone, channel, status)
+  values (current_user_id, coalesce(current_email, ''), current_name, trim(p_phone), p_channel, 'pending')
+  on conflict (user_id) do update
+    set email = excluded.email,
+        name = excluded.name,
+        phone = excluded.phone,
+        channel = excluded.channel,
+        status = 'pending'
+  returning id into signup_request_id;
+
+  insert into public.registration_payments (signup_request_id, user_id, phone, amount, mpesa_code, status, admin_note, confirmed_at)
+  values (
+    signup_request_id,
+    current_user_id,
+    trim(p_phone),
+    coalesce(p_amount, 250),
+    upper(trim(p_mpesa_code)),
+    'pending',
+    null,
+    null
+  )
+  on conflict (signup_request_id) do update
+    set phone = excluded.phone,
+        amount = excluded.amount,
+        mpesa_code = excluded.mpesa_code,
+        status = 'pending',
+        admin_note = null,
+        confirmed_at = null;
+
+  update public.profiles
+  set phone = trim(p_phone)
+  where id = current_user_id;
+
+  return true;
+end;
 $$;
 
 create or replace function public.list_my_tasks()
@@ -403,6 +507,10 @@ begin
     raise exception 'Your account is not active yet.';
   end if;
 
+  if not public.has_confirmed_payment() then
+    raise exception 'Submit and confirm your M-Pesa payment first.';
+  end if;
+
   if not exists (
     select 1
     from public.tasks
@@ -442,6 +550,10 @@ declare
 begin
   if not public.is_active_user() then
     raise exception 'Your account is not active yet.';
+  end if;
+
+  if not public.has_confirmed_payment() then
+    raise exception 'Submit and confirm your M-Pesa payment first.';
   end if;
 
   select balance
@@ -532,8 +644,9 @@ begin
     where id = p_user_id
       and role = 'user'
       and account_status = 'active'
+      and public.has_confirmed_payment(p_user_id)
   ) then
-    raise exception 'You can only assign tasks to active users.';
+    raise exception 'You can only assign tasks to users with confirmed payment.';
   end if;
 
   insert into public.assignments (task_id, user_id, state)
@@ -703,10 +816,6 @@ begin
   set status = 'completed'
   where user_id = target_user_id;
 
-  update public.profiles
-  set account_status = 'active'
-  where id = target_user_id;
-
   return true;
 end;
 $$;
@@ -744,10 +853,6 @@ begin
   update public.signup_requests
   set status = 'rejected'
   where user_id = target_user_id;
-
-  update public.profiles
-  set account_status = 'rejected'
-  where id = target_user_id;
 
   return true;
 end;
@@ -1035,9 +1140,11 @@ end;
 $$;
 
 grant execute on function public.list_available_tasks() to authenticated;
+grant execute on function public.get_my_payment_status() to authenticated;
 grant execute on function public.list_my_tasks() to authenticated;
 grant execute on function public.get_my_stats() to authenticated;
 grant execute on function public.claim_task(integer) to authenticated;
+grant execute on function public.submit_my_registration_payment(text, text, double precision, text) to authenticated;
 grant execute on function public.request_withdrawal() to authenticated;
 grant execute on function public.create_task(text, text, date, integer) to authenticated;
 grant execute on function public.assign_task(integer, uuid) to authenticated;

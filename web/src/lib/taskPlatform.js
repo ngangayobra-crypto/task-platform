@@ -163,7 +163,7 @@ export async function getAuthenticatedUser(user) {
   return mapAuthUser(user, profile);
 }
 
-export async function signUpWithPayment({ name, email, phone, password, mpesaCode }) {
+export async function signUpUser({ name, email, phone, password }) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -171,9 +171,6 @@ export async function signUpWithPayment({ name, email, phone, password, mpesaCod
       data: {
         name: name.trim(),
         phone: phone.trim(),
-        channel: "sms",
-        mpesa_code: mpesaCode.trim().toUpperCase(),
-        amount: REGISTRATION_FEE,
       },
     },
   });
@@ -201,17 +198,6 @@ export async function signInWithPassword({ email, password }) {
 
   const profile = await getCurrentProfile(data.user.id);
   const me = mapAuthUser(data.user, profile);
-
-  if (me.account_status !== "active") {
-    await supabase.auth.signOut({ scope: "local" });
-
-    if (me.account_status === "rejected") {
-      throw new Error("Your signup payment was rejected. Contact an admin for next steps.");
-    }
-
-    throw new Error("Your account is still waiting for admin approval.");
-  }
-
   return me;
 }
 
@@ -239,6 +225,34 @@ export async function getMyStats() {
     completed: toInt(row?.completed) || 0,
     balance: toMoney(row?.balance),
   };
+}
+
+export async function getMyPaymentStatus() {
+  const row = await rpcSingle("get_my_payment_status");
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+    payment_id: toInt(row.payment_id),
+    amount: toMoney(row.amount || REGISTRATION_FEE),
+    phone: row.phone || "",
+    mpesa_code: row.mpesa_code || "",
+    payment_status: row.payment_status || "pending",
+    admin_note: row.admin_note || "",
+    submitted_at: row.submitted_at || null,
+    confirmed_at: row.confirmed_at || null,
+  };
+}
+
+export async function submitMyRegistrationPayment({ phone, mpesaCode, amount = REGISTRATION_FEE }) {
+  return rpcSingle("submit_my_registration_payment", {
+    p_phone: phone.trim(),
+    p_mpesa_code: mpesaCode.trim().toUpperCase(),
+    p_amount: Number(amount) || REGISTRATION_FEE,
+    p_channel: "sms",
+  });
 }
 
 export async function claimTask(taskId) {

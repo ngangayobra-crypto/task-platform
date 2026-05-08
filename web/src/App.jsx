@@ -9,7 +9,7 @@ import {
   onAuthStateChange,
   signInWithPassword,
   signOutUser,
-  signUpWithPayment,
+  signUpUser,
 } from "./lib/taskPlatform";
 
 function FullScreenState({ title, body }) {
@@ -71,19 +71,8 @@ export default function App() {
         const nextUser = await getAuthenticatedUser(session.user);
 
         if (!active) return;
-
-        if (nextUser.account_status !== "active") {
-          await signOutUser();
-          setMe(null);
-          setNotice(
-            nextUser.account_status === "rejected"
-              ? "Your signup payment was rejected. Contact an admin for next steps."
-              : "Your account is still waiting for admin approval.",
-          );
-        } else {
-          setMe(nextUser);
-          setNotice("");
-        }
+        setMe(nextUser);
+        setNotice("");
       } catch (error) {
         if (!active) return;
         setMe(null);
@@ -127,7 +116,7 @@ export default function App() {
   }
 
   async function handleRegister(values) {
-    await signUpWithPayment(values);
+    await signUpUser(values);
     setNotice("");
   }
 

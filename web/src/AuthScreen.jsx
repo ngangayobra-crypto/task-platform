@@ -1,6 +1,5 @@
 import { useState } from "react";
 import "./AuthScreen.css";
-import { REGISTRATION_FEE } from "./lib/constants";
 
 function LogoMark() {
   return (
@@ -93,7 +92,6 @@ function RegisterForm({ onRegister, onSwitch }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [mpesaCode, setMpesaCode] = useState("");
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -103,10 +101,7 @@ function RegisterForm({ onRegister, onSwitch }) {
     const values = Object.fromEntries(new FormData(event.currentTarget).entries());
 
     try {
-      await onRegister({
-        ...values,
-        mpesaCode,
-      });
+      await onRegister(values);
       setSuccess(true);
     } catch (submitError) {
       setError(submitError.message);
@@ -130,10 +125,9 @@ function RegisterForm({ onRegister, onSwitch }) {
             />
           </svg>
         </div>
-        <h3 className="as-success-title">Request submitted</h3>
+        <h3 className="as-success-title">Account created</h3>
         <p className="as-success-body">
-          Your account and payment request were saved in Supabase. If your project requires email
-          verification, confirm your email first, then wait for admin approval before signing in.
+          Your account was created.
         </p>
         <button className="as-btn" type="button" onClick={onSwitch}>
           Back to sign in
@@ -203,33 +197,6 @@ function RegisterForm({ onRegister, onSwitch }) {
         />
       </div>
 
-      <div className="as-mpesa-section">
-        <div className="as-mpesa-header">
-          <span className="as-mpesa-label">Registration fee</span>
-          <span className="as-mpesa-amount">KES {REGISTRATION_FEE}</span>
-        </div>
-        <div className="as-mpesa-instruction">
-          Send ksh.250 to pochi la biashara 0111445540, then wait 25 minutes to login. 
-        </div>
-      </div>
-
-      <div className="as-field">
-        <label className="as-label" htmlFor="register-mpesa">
-          M-Pesa confirmation code
-        </label>
-        <input
-          id="register-mpesa"
-          className="as-input as-input-mono"
-          name="mpesa_code"
-          placeholder="QJK3H8YT92"
-          value={mpesaCode}
-          onChange={(event) => setMpesaCode(event.target.value.toUpperCase().replace(/\s/g, ""))}
-          minLength={8}
-          maxLength={20}
-          required
-        />
-      </div>
-
       <label className="as-agree">
         <input type="checkbox" required />
         <span>I agree to the platform rules.</span>
@@ -239,10 +206,10 @@ function RegisterForm({ onRegister, onSwitch }) {
 
       <button className="as-btn" type="submit" disabled={loading}>
         {loading ? <span className="as-spinner" /> : null}
-        {loading ? "Submitting..." : "Submit request"}
+        {loading ? "Creating account..." : "Create account"}
       </button>
 
-      <p className="as-note">Your account becomes active after an admin confirms your payment.</p>
+      <p className="as-note">You'll submit your M-Pesa details after signing in.</p>
 
       <p className="as-switch">
         Already have an account?{" "}

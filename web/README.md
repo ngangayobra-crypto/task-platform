@@ -13,6 +13,8 @@ VITE_SUPABASE_URL=your-project-url
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
+If you add or change `.env.local`, restart `npm run dev` so Vite reloads the Supabase variables.
+
 4. Install dependencies and start the site:
 
 ```bash
@@ -26,8 +28,7 @@ Create the first auth user from the Supabase Auth dashboard, then promote that u
 
 ```sql
 update public.profiles
-set role = 'admin',
-    account_status = 'active'
+set role = 'admin'
 where id = 'AUTH_USER_UUID_HERE';
 ```
 
@@ -35,6 +36,8 @@ After that, sign in through the website and use the admin dashboard for the rest
 
 ## Notes
 
-- New user signups create their Supabase auth account and the matching signup/payment rows automatically through a database trigger.
+- New user signups create their auth account immediately with no admin approval step.
+- After sign-in, non-admin users must submit their M-Pesa payment details inside the app before tasks and withdrawals unlock.
+- Re-run [supabase/schema.sql](/C:/Users/brayo/OneDrive/Desktop/task-platform/web/supabase/schema.sql) if you have an older Supabase setup from the previous approval-based flow.
 - Submission uploads go to the private `submission-files` storage bucket defined in the schema.
 - The old Node/SQLite backend is no longer used by the website.
