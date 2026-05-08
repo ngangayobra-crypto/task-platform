@@ -135,12 +135,7 @@ export default function App() {
   }
 
   if (loading) {
-    return (
-      <FullScreenState
-        title="Loading TaskHive"
-        body="Connecting to Supabase and restoring your session."
-      />
-    );
+    return null;
   }
 
   if (!me) {
