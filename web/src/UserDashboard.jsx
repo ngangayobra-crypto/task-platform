@@ -451,6 +451,7 @@ export default function UserDashboard({ me, onLogout }) {
   const [available, setAvailable] = useState([]);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [availableError, setAvailableError] = useState("");
   const [stats, setStats] = useState({
     claimed: 0,
     approved_to_start: 0,
@@ -542,9 +543,12 @@ export default function UserDashboard({ me, onLogout }) {
     try {
       const rows = await listAvailableTasks();
       setAvailable(Array.isArray(rows) ? rows : []);
+      setAvailableError("");
       setTasksLoaded(true);
     } catch (error) {
-      console.error(error);
+      setAvailable([]);
+      setAvailableError(error.message || "Could not load available tasks.");
+      setTasksLoaded(true);
     }
   }, []);
 
@@ -586,6 +590,7 @@ export default function UserDashboard({ me, onLogout }) {
 
     const intervalId = window.setInterval(() => {
       void loadMyTasks();
+      void loadAvailable();
       void loadStats();
     }, 10000);
 
@@ -851,9 +856,20 @@ export default function UserDashboard({ me, onLogout }) {
                   Clear
                 </button>
               ) : null}
+              <button className="ud-chip-clear" onClick={() => void loadAvailable()}>
+                Refresh
+              </button>
             </div>
 
-            {filteredAvailable.length === 0 ? (
+            {availableError ? (
+              <div className="ud-empty">
+                <div className="ud-empty-text">Tasks could not load</div>
+                <div className="ud-empty-sub">{availableError}</div>
+                <button className="ud-btn-primary" style={{ marginTop: 12 }} onClick={() => void loadAvailable()}>
+                  Try again
+                </button>
+              </div>
+            ) : filteredAvailable.length === 0 ? (
               <div className="ud-empty">
                 <div className="ud-empty-text">{search || filterTime ? "No matches" : "No tasks available"}</div>
                 <div className="ud-empty-sub">
