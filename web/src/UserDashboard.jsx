@@ -376,7 +376,7 @@ function ClaimPaymentModal({ task, me, paymentStatus, submitting, onSubmit, onCl
         <h2 className="ud-payment-title">Submit your M-Pesa payment</h2>
         <p className="ud-payment-body">
           Before claiming <strong>{task.title}</strong>, send KES {REGISTRATION_FEE} to M-Pesa
-          pochi 0111445540, then submit the phone number and confirmation code here.
+          buy goods 6627899, then submit the phone number and confirmation code here.
         </p>
 
         {isPending ? (
@@ -451,7 +451,6 @@ export default function UserDashboard({ me, onLogout }) {
   const [available, setAvailable] = useState([]);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [submittingPayment, setSubmittingPayment] = useState(false);
-  const [availableError, setAvailableError] = useState("");
   const [stats, setStats] = useState({
     claimed: 0,
     approved_to_start: 0,
@@ -543,12 +542,9 @@ export default function UserDashboard({ me, onLogout }) {
     try {
       const rows = await listAvailableTasks();
       setAvailable(Array.isArray(rows) ? rows : []);
-      setAvailableError("");
       setTasksLoaded(true);
     } catch (error) {
-      setAvailable([]);
-      setAvailableError(error.message || "Could not load available tasks.");
-      setTasksLoaded(true);
+      console.error(error);
     }
   }, []);
 
@@ -590,7 +586,6 @@ export default function UserDashboard({ me, onLogout }) {
 
     const intervalId = window.setInterval(() => {
       void loadMyTasks();
-      void loadAvailable();
       void loadStats();
     }, 10000);
 
@@ -809,9 +804,7 @@ export default function UserDashboard({ me, onLogout }) {
             {!humanVerified ? (
               <div className="ud-claim-banner">
                 <div className="ud-claim-banner-title">First claim requires a quick human check</div>
-                <div className="ud-claim-banner-body">
-                  We only ask once on this browser, right before your first task claim.
-                </div>
+                
               </div>
             ) : null}
 
@@ -856,20 +849,9 @@ export default function UserDashboard({ me, onLogout }) {
                   Clear
                 </button>
               ) : null}
-              <button className="ud-chip-clear" onClick={() => void loadAvailable()}>
-                Refresh
-              </button>
             </div>
 
-            {availableError ? (
-              <div className="ud-empty">
-                <div className="ud-empty-text">Tasks could not load</div>
-                <div className="ud-empty-sub">{availableError}</div>
-                <button className="ud-btn-primary" style={{ marginTop: 12 }} onClick={() => void loadAvailable()}>
-                  Try again
-                </button>
-              </div>
-            ) : filteredAvailable.length === 0 ? (
+            {filteredAvailable.length === 0 ? (
               <div className="ud-empty">
                 <div className="ud-empty-text">{search || filterTime ? "No matches" : "No tasks available"}</div>
                 <div className="ud-empty-sub">

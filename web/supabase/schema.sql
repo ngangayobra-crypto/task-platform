@@ -891,6 +891,8 @@ as $$
   order by t.created_at desc;
 $$;
 
+drop function if exists public.list_users_overview();
+
 create or replace function public.list_users_overview()
 returns table (
   id uuid,
