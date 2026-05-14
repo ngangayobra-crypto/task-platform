@@ -803,17 +803,16 @@ export default function UserDashboard({ me, onLogout }) {
           <>
             {!humanVerified ? (
               <div className="ud-claim-banner">
-                <div className="ud-claim-banner-title">First claim requires a quick human check</div>
+                
                 
               </div>
             ) : null}
 
             {!paymentConfirmed ? (
               <div className="ud-claim-banner">
-                <div className="ud-claim-banner-title">Task claiming still needs your M-Pesa payment</div>
+                
                 <div className="ud-claim-banner-body">
-                  You can browse the app now. We will only ask for payment details when you try to
-                  claim a task.
+                  
                 </div>
               </div>
             ) : null}
