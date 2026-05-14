@@ -200,7 +200,7 @@ create policy "tasks_select_open"
   on public.tasks
   for select
   to authenticated
-  using (public.is_active_user() and public.has_confirmed_payment() and status = 'open');
+  using (public.is_active_user() and status = 'open');
 
 drop policy if exists "assignments_select_self" on public.assignments;
 create policy "assignments_select_self"
@@ -307,7 +307,6 @@ as $$
     t.created_at
   from public.tasks t
   where public.is_active_user()
-    and public.has_confirmed_payment()
     and t.status = 'open'
     and not exists (
       select 1

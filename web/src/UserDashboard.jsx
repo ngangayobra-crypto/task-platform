@@ -344,10 +344,12 @@ function HumanCheckModal({ task, verifying, onCancel, onVerify }) {
   );
 }
 
-function PaymentGate({ me, paymentStatus, submitting, onSubmit, onLogout }) {
+function ClaimPaymentModal({ task, me, paymentStatus, submitting, onSubmit, onClose }) {
   const [phone, setPhone] = useState(() => paymentStatus?.phone || me?.phone || "");
   const [mpesaCode, setMpesaCode] = useState(() => paymentStatus?.mpesa_code || "");
   const [localError, setLocalError] = useState("");
+
+  if (!task) return null;
 
   const status = paymentStatus?.payment_status || "missing";
   const isRejected = status === "rejected";
@@ -368,95 +370,74 @@ function PaymentGate({ me, paymentStatus, submitting, onSubmit, onLogout }) {
   }
 
   return (
-    <div className="ud-root">
-      <div className="ud-phone">
-        <div className="ud-statusbar">
-          <div className="ud-status-icons">
-            <svg width="15" height="10" viewBox="0 0 15 10" fill="currentColor" opacity=".7">
-              <rect x="0" y="4" width="3" height="6" rx=".5" />
-              <rect x="4" y="2.5" width="3" height="7.5" rx=".5" />
-              <rect x="8" y="1" width="3" height="9" rx=".5" />
-              <rect x="12" y="0" width="3" height="10" rx=".5" />
-            </svg>
-          </div>
-        </div>
+    <div className="ud-human-check-shell">
+      <div className="ud-payment-card ud-payment-card-modal">
+        <div className="ud-payment-kicker">Needed before claiming your first task</div>
+        <h2 className="ud-payment-title">Submit your M-Pesa payment</h2>
+        <p className="ud-payment-body">
+          Before claiming <strong>{task.title}</strong>, send KES {REGISTRATION_FEE} to M-Pesa
+          pochi 0111445540, then submit the phone number and confirmation code here.
+        </p>
 
-        <div className="ud-topnav">
-          <span className="ud-topnav-title">Complete setup</span>
-          <div className="ud-topnav-right">
-            <button className="ud-btn-ghost ud-btn-sm" onClick={() => void onLogout()}>
-              Sign out
+        {isPending ? (
+          <div className="ud-payment-status ud-payment-status-pending">
+            Payment submitted and waiting for admin confirmation. You can stay in the app and come
+            back to claim after approval.
+          </div>
+        ) : null}
+
+        {isRejected ? (
+          <div className="ud-payment-status ud-payment-status-rejected">
+            Payment was rejected{paymentStatus?.admin_note ? `: ${paymentStatus.admin_note}` : "."}
+          </div>
+        ) : null}
+
+        {localError ? (
+          <div className="ud-payment-status ud-payment-status-rejected">{localError}</div>
+        ) : null}
+
+        <form className="ud-payment-form" onSubmit={handleSubmit}>
+          <label className="ud-payment-label" htmlFor="payment-phone">
+            M-Pesa phone number
+          </label>
+          <input
+            id="payment-phone"
+            className="ud-payment-input"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
+            placeholder="07xxxxxxxx"
+            required
+          />
+
+          <label className="ud-payment-label" htmlFor="payment-code">
+            M-Pesa confirmation code
+          </label>
+          <input
+            id="payment-code"
+            className="ud-payment-input ud-payment-input-mono"
+            value={mpesaCode}
+            onChange={(event) => setMpesaCode(event.target.value.toUpperCase().replace(/\s/g, ""))}
+            placeholder="QJK3H8YT92"
+            minLength={8}
+            maxLength={20}
+            required
+          />
+
+          <div className="ud-human-check-actions">
+            <button className="ud-btn-ghost" type="button" onClick={onClose}>
+              Maybe later
+            </button>
+            <button className="ud-btn-primary" type="submit" disabled={submitting}>
+              {submitting
+                ? "Saving payment..."
+                : isPending
+                  ? "Update payment details"
+                  : isRejected
+                    ? "Resubmit payment"
+                    : "Submit payment"}
             </button>
           </div>
-        </div>
-
-        <div className="ud-body">
-          <div className="ud-payment-shell">
-            <div className="ud-payment-card">
-              <div className="ud-payment-kicker">Required before using the app</div>
-              <h2 className="ud-payment-title">Submit your M-Pesa payment</h2>
-              <p className="ud-payment-body">
-                Send KES {REGISTRATION_FEE} to M-Pesa pochi 0111445540, then submit the phone
-                number and confirmation code here. Once the payment is confirmed, the rest of the
-                app unlocks for you.
-              </p>
-
-              {isPending ? (
-                <div className="ud-payment-status ud-payment-status-pending">
-                  Payment submitted and waiting for admin confirmation.
-                </div>
-              ) : null}
-
-              {isRejected ? (
-                <div className="ud-payment-status ud-payment-status-rejected">
-                  Payment was rejected{paymentStatus?.admin_note ? `: ${paymentStatus.admin_note}` : "."}
-                </div>
-              ) : null}
-
-              {localError ? (
-                <div className="ud-payment-status ud-payment-status-rejected">{localError}</div>
-              ) : null}
-
-              <form className="ud-payment-form" onSubmit={handleSubmit}>
-                <label className="ud-payment-label" htmlFor="payment-phone">
-                  M-Pesa phone number
-                </label>
-                <input
-                  id="payment-phone"
-                  className="ud-payment-input"
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  placeholder="07xxxxxxxx"
-                  required
-                />
-
-                <label className="ud-payment-label" htmlFor="payment-code">
-                  M-Pesa confirmation code
-                </label>
-                <input
-                  id="payment-code"
-                  className="ud-payment-input ud-payment-input-mono"
-                  value={mpesaCode}
-                  onChange={(event) => setMpesaCode(event.target.value.toUpperCase().replace(/\s/g, ""))}
-                  placeholder="QJK3H8YT92"
-                  minLength={8}
-                  maxLength={20}
-                  required
-                />
-
-                <button className="ud-btn-primary" type="submit" disabled={submitting}>
-                  {submitting
-                    ? "Saving payment..."
-                    : isPending
-                      ? "Update payment details"
-                      : isRejected
-                        ? "Resubmit payment"
-                        : "Submit payment"}
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
+        </form>
       </div>
     </div>
   );
@@ -484,6 +465,7 @@ export default function UserDashboard({ me, onLogout }) {
   const [tasksLoaded, setTasksLoaded] = useState(false);
   const [humanVerified, setHumanVerified] = useState(false);
   const [humanCheckTask, setHumanCheckTask] = useState(null);
+  const [paymentPromptTask, setPaymentPromptTask] = useState(null);
   const previousTaskStates = useRef({});
   const notificationId = useRef(0);
 
@@ -598,19 +580,6 @@ export default function UserDashboard({ me, onLogout }) {
   }, [loadPaymentStatus, paymentConfirmed]);
 
   useEffect(() => {
-    if (!paymentConfirmed) {
-      setMyTasks([]);
-      setAvailable([]);
-      setStats({
-        claimed: 0,
-        approved_to_start: 0,
-        completed: 0,
-        balance: 0,
-      });
-      setTasksLoaded(false);
-      return undefined;
-    }
-
     void loadMyTasks();
     void loadAvailable();
     void loadStats();
@@ -623,16 +592,16 @@ export default function UserDashboard({ me, onLogout }) {
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [loadAvailable, loadMyTasks, loadStats, paymentConfirmed]);
+  }, [loadAvailable, loadMyTasks, loadStats]);
 
   useEffect(() => {
-    if (paymentConfirmed && tasksLoaded && myTasks.length === 0 && available.length >= 0) {
+    if (tasksLoaded && myTasks.length === 0 && available.length >= 0) {
       const seen = window.localStorage.getItem("th_onboarding_done");
       if (!seen) {
         setShowOnboarding(true);
       }
     }
-  }, [available.length, myTasks.length, paymentConfirmed, tasksLoaded]);
+  }, [available.length, myTasks.length, tasksLoaded]);
 
   async function handlePaymentSubmit(values) {
     setSubmittingPayment(true);
@@ -642,7 +611,13 @@ export default function UserDashboard({ me, onLogout }) {
       const nextStatus = await loadPaymentStatus();
 
       if (nextStatus?.payment_status === "confirmed") {
-        addNotification("Payment confirmed. The app is now unlocked.", "success");
+        addNotification("Payment confirmed. You can now claim tasks.", "success");
+        const nextTask = paymentPromptTask;
+        setPaymentPromptTask(null);
+
+        if (nextTask) {
+          await handleClaimTask(nextTask.id);
+        }
       } else {
         addNotification("Payment details submitted. Waiting for admin confirmation.", "info");
       }
@@ -668,12 +643,17 @@ export default function UserDashboard({ me, onLogout }) {
   }
 
   async function handleClaimIntent(task) {
-    if (humanVerified) {
+    if (humanVerified && paymentConfirmed) {
       await handleClaimTask(task.id);
       return;
     }
 
-    setHumanCheckTask(task);
+    if (!humanVerified) {
+      setHumanCheckTask(task);
+      return;
+    }
+
+    setPaymentPromptTask(task);
   }
 
   async function handleHumanCheckSuccess() {
@@ -683,6 +663,12 @@ export default function UserDashboard({ me, onLogout }) {
     setHumanVerified(true);
     const task = humanCheckTask;
     setHumanCheckTask(null);
+
+    if (!paymentConfirmed) {
+      setPaymentPromptTask(task);
+      return;
+    }
+
     await handleClaimTask(task.id);
   }
 
@@ -720,19 +706,6 @@ export default function UserDashboard({ me, onLogout }) {
     setShowOnboarding(false);
     setTab("tasks");
     setTaskTab("available");
-  }
-
-  if (!paymentConfirmed) {
-    return (
-      <PaymentGate
-        key={`${paymentStatus?.id || "new"}:${paymentStatus?.updated_at || paymentStatus?.created_at || me?.id || "user"}`}
-        me={me}
-        paymentStatus={paymentStatus}
-        submitting={submittingPayment}
-        onSubmit={handlePaymentSubmit}
-        onLogout={onLogout}
-      />
-    );
   }
 
   const myTaskIds = new Set(myTasks.map((task) => task.task_id));
@@ -833,6 +806,16 @@ export default function UserDashboard({ me, onLogout }) {
                 <div className="ud-claim-banner-title">First claim requires a quick human check</div>
                 <div className="ud-claim-banner-body">
                   We only ask once on this browser, right before your first task claim.
+                </div>
+              </div>
+            ) : null}
+
+            {!paymentConfirmed ? (
+              <div className="ud-claim-banner">
+                <div className="ud-claim-banner-title">Task claiming still needs your M-Pesa payment</div>
+                <div className="ud-claim-banner-body">
+                  You can browse the app now. We will only ask for payment details when you try to
+                  claim a task.
                 </div>
               </div>
             ) : null}
@@ -1012,6 +995,15 @@ export default function UserDashboard({ me, onLogout }) {
           verifying={Boolean(humanCheckTask && claimingIds[humanCheckTask.id])}
           onCancel={() => setHumanCheckTask(null)}
           onVerify={handleHumanCheckSuccess}
+        />
+        <ClaimPaymentModal
+          key={paymentPromptTask?.id || "payment-prompt"}
+          task={paymentPromptTask}
+          me={me}
+          paymentStatus={paymentStatus}
+          submitting={submittingPayment}
+          onSubmit={handlePaymentSubmit}
+          onClose={() => setPaymentPromptTask(null)}
         />
 
         <div className="ud-body">
