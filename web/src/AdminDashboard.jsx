@@ -759,7 +759,7 @@ function UsersTab({ addToast }) {
               <option value="">Select a user</option>
               {assignableUsers.map((user) => (
                 <option key={user.id} value={user.id}>
-                  {user.name} ({user.email})
+                  {user.name} ({user.phone || user.email})
                 </option>
               ))}
             </select>
@@ -784,11 +784,13 @@ function UsersTab({ addToast }) {
               <div className="ad-card-info">
                 <div className="ad-card-title">{user.name}</div>
                 <div className="ad-card-sub">{user.email}</div>
+                {user.phone ? <div className="ad-card-meta-note">{user.phone}</div> : null}
               </div>
               <div className="ad-balance-display">${Number(user.balance).toFixed(2)}</div>
             </div>
 
             <div className="ad-meta-row">
+              {user.phone ? <span className="ad-pill ad-pill-gray">Phone {user.phone}</span> : null}
               <span className="ad-pill ad-pill-gray">Claimed: {user.tasks_claimed}</span>
               <span className="ad-pill ad-pill-gray">Submitted: {user.tasks_submitted}</span>
               <span className="ad-pill ad-pill-gray">Done: {user.tasks_completed}</span>
@@ -1009,6 +1011,7 @@ export default function AdminDashboard({ me, onLogout }) {
           <div>
             <div className="ad-topnav-title">TaskHive Admin</div>
             <div className="ad-topnav-sub">{me?.name}</div>
+            <div className="ad-topnav-meta">{me?.phone || "No phone saved on this admin account"}</div>
           </div>
           <button className="ad-logout-btn" onClick={() => void onLogout()}>
             Sign out

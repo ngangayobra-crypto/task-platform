@@ -1,6 +1,37 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap");
+
 :root {
-  color: #f5f5f5;
-  background: #09090f;
+  --bg: #fff7f0;
+  --bg-soft: #ffefe0;
+  --surface: #fffdf9;
+  --surface-strong: #ffffff;
+  --surface-tint: #fff3e6;
+  --line: #f1d9bf;
+  --line-strong: #e2b383;
+  --text: #342316;
+  --muted: #7b5d48;
+  --muted-soft: #a48671;
+  --accent: #eb6f1d;
+  --accent-deep: #bf4f11;
+  --accent-soft: #fff0e1;
+  --success: #2f7d4a;
+  --success-soft: #edf8f0;
+  --danger: #c35a34;
+  --danger-soft: #fff0eb;
+  --warning: #b97822;
+  --warning-soft: #fff4dd;
+  --shadow-sm: 0 14px 28px rgba(107, 64, 21, 0.08);
+  --shadow-lg: 0 28px 60px rgba(107, 64, 21, 0.12);
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --font-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(255, 176, 92, 0.26), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 224, 191, 0.82), transparent 32%),
+    linear-gradient(180deg, #fffaf4 0%, #fff4ea 42%, #fff8f1 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -18,13 +49,15 @@ body,
 }
 
 html {
-  background: #09090f;
+  background: var(--bg);
 }
 
 body {
   margin: 0;
   min-width: 320px;
-  background: #09090f;
+  font-family: var(--font-body);
+  background: transparent;
+  color: var(--text);
 }
 
 button,
@@ -34,6 +67,25 @@ select {
   font: inherit;
 }
 
+button {
+  color: inherit;
+}
+
+input,
+textarea,
+select {
+  color: var(--text);
+}
+
 a {
   color: inherit;
+}
+
+strong {
+  color: var(--text);
+}
+
+::selection {
+  background: rgba(235, 111, 29, 0.18);
+  color: var(--text);
 }

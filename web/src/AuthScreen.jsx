@@ -188,6 +188,7 @@ function RegisterForm({ onRegister, onSwitch }) {
           autoComplete="tel"
           required
         />
+        <div className="as-field-hint">Use the number tied to your M-Pesa account.</div>
       </div>
 
       <div className="as-field">

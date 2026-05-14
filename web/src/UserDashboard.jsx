@@ -12,6 +12,19 @@ import {
   submitMyRegistrationPayment,
 } from "./lib/taskPlatform";
 
+const HUMAN_CHECK_STORAGE_KEY = "th_claim_human_verified_v1";
+
+function createHumanCheckChallenge() {
+  const first = Math.floor(Math.random() * 6) + 3;
+  const second = Math.floor(Math.random() * 5) + 2;
+
+  return {
+    first,
+    second,
+    total: first + second,
+  };
+}
+
 const Icon = {
   home: () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -257,6 +270,80 @@ function EarningsHistory({ tasks }) {
   );
 }
 
+function HumanCheckModal({ task, verifying, onCancel, onVerify }) {
+  const [confirmed, setConfirmed] = useState(false);
+  const [answer, setAnswer] = useState("");
+  const [error, setError] = useState("");
+  const [challenge] = useState(createHumanCheckChallenge);
+
+  if (!task) return null;
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+
+    if (!confirmed) {
+      setError("Tick the checkbox first so we know you are claiming this task yourself.");
+      return;
+    }
+
+    if (Number(answer) !== challenge.total) {
+      setError("That quick check did not match. Try the sum again.");
+      return;
+    }
+
+    setError("");
+    await onVerify();
+  }
+
+  return (
+    <div className="ud-human-check-shell">
+      <div className="ud-human-check-card">
+        <div className="ud-human-check-kicker">One-time check before your first claim</div>
+        <h3 className="ud-human-check-title">Confirm you are not a bot</h3>
+        <p className="ud-human-check-body">
+          You are about to claim <strong>{task.title}</strong>. Once you pass this quick check,
+          future claims on this browser go straight through.
+        </p>
+
+        <form className="ud-human-check-form" onSubmit={handleSubmit}>
+          <label className="ud-human-check-consent">
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={(event) => setConfirmed(event.target.checked)}
+            />
+            <span>I am claiming tasks myself and not using an automated script.</span>
+          </label>
+
+          <label className="ud-payment-label" htmlFor="human-check-answer">
+            Quick sum
+          </label>
+          <input
+            id="human-check-answer"
+            className="ud-payment-input"
+            inputMode="numeric"
+            placeholder={`${challenge.first} + ${challenge.second} = ?`}
+            value={answer}
+            onChange={(event) => setAnswer(event.target.value.replace(/[^0-9]/g, ""))}
+            required
+          />
+
+          {error ? <div className="ud-human-check-error">{error}</div> : null}
+
+          <div className="ud-human-check-actions">
+            <button className="ud-btn-ghost" type="button" onClick={onCancel}>
+              Cancel
+            </button>
+            <button className="ud-btn-primary" type="submit" disabled={verifying}>
+              {verifying ? "Claiming..." : "Verify and claim"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function PaymentGate({ me, paymentStatus, submitting, onSubmit, onLogout }) {
   const [phone, setPhone] = useState(() => paymentStatus?.phone || me?.phone || "");
   const [mpesaCode, setMpesaCode] = useState(() => paymentStatus?.mpesa_code || "");
@@ -309,8 +396,9 @@ function PaymentGate({ me, paymentStatus, submitting, onSubmit, onLogout }) {
               <div className="ud-payment-kicker">Required before using the app</div>
               <h2 className="ud-payment-title">Submit your M-Pesa payment</h2>
               <p className="ud-payment-body">
-                  CONFIRM YOU ARE NOT A BOT !!  Send KES {REGISTRATION_FEE} to M-Pesa pochi 0111445540, then submit the phone number and
-                confirmation code here. Once the payment is confirmed, you can access the FULL WEBSITE.
+                Send KES {REGISTRATION_FEE} to M-Pesa pochi 0111445540, then submit the phone
+                number and confirmation code here. Once the payment is confirmed, the rest of the
+                app unlocks for you.
               </p>
 
               {isPending ? (
@@ -375,6 +463,7 @@ function PaymentGate({ me, paymentStatus, submitting, onSubmit, onLogout }) {
 }
 
 export default function UserDashboard({ me, onLogout }) {
+  const humanCheckStorageKey = `${HUMAN_CHECK_STORAGE_KEY}:${me?.id || "guest"}`;
   const [tab, setTab] = useState("home");
   const [taskTab, setTaskTab] = useState("available");
   const [myTasks, setMyTasks] = useState([]);
@@ -393,6 +482,8 @@ export default function UserDashboard({ me, onLogout }) {
   const [filterTime, setFilterTime] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [tasksLoaded, setTasksLoaded] = useState(false);
+  const [humanVerified, setHumanVerified] = useState(false);
+  const [humanCheckTask, setHumanCheckTask] = useState(null);
   const previousTaskStates = useRef({});
   const notificationId = useRef(0);
 
@@ -489,6 +580,10 @@ export default function UserDashboard({ me, onLogout }) {
   }, [loadPaymentStatus]);
 
   useEffect(() => {
+    setHumanVerified(window.localStorage.getItem(humanCheckStorageKey) === "1");
+  }, [humanCheckStorageKey]);
+
+  useEffect(() => {
     if (paymentConfirmed) {
       return undefined;
     }
@@ -570,6 +665,25 @@ export default function UserDashboard({ me, onLogout }) {
     } finally {
       setClaimingIds((current) => ({ ...current, [taskId]: false }));
     }
+  }
+
+  async function handleClaimIntent(task) {
+    if (humanVerified) {
+      await handleClaimTask(task.id);
+      return;
+    }
+
+    setHumanCheckTask(task);
+  }
+
+  async function handleHumanCheckSuccess() {
+    if (!humanCheckTask) return;
+
+    window.localStorage.setItem(humanCheckStorageKey, "1");
+    setHumanVerified(true);
+    const task = humanCheckTask;
+    setHumanCheckTask(null);
+    await handleClaimTask(task.id);
   }
 
   async function handleSubmitWork(assignmentId) {
@@ -714,6 +828,15 @@ export default function UserDashboard({ me, onLogout }) {
 
         {taskTab === "available" ? (
           <>
+            {!humanVerified ? (
+              <div className="ud-claim-banner">
+                <div className="ud-claim-banner-title">First claim requires a quick human check</div>
+                <div className="ud-claim-banner-body">
+                  We only ask once on this browser, right before your first task claim.
+                </div>
+              </div>
+            ) : null}
+
             <div className="ud-search-wrap">
               <Icon.search />
               <input
@@ -763,7 +886,7 @@ export default function UserDashboard({ me, onLogout }) {
                   task={task}
                   mode="available"
                   claiming={Boolean(claimingIds[task.id])}
-                  onClaim={() => void handleClaimTask(task.id)}
+                  onClaim={() => void handleClaimIntent(task)}
                 />
               ))
             )}
@@ -828,6 +951,7 @@ export default function UserDashboard({ me, onLogout }) {
           <div className="ud-profile-avatar">{initials}</div>
           <div className="ud-profile-name">{me?.name}</div>
           <div className="ud-profile-email">{me?.email}</div>
+          {me?.phone ? <div className="ud-profile-phone">{me.phone}</div> : null}
         </div>
 
         <div className="ud-profile-stats">
@@ -882,6 +1006,13 @@ export default function UserDashboard({ me, onLogout }) {
         </div>
 
         <NotificationBar notifications={notifications} onDismiss={dismissNotification} />
+        <HumanCheckModal
+          key={humanCheckTask?.id || "human-check"}
+          task={humanCheckTask}
+          verifying={Boolean(humanCheckTask && claimingIds[humanCheckTask.id])}
+          onCancel={() => setHumanCheckTask(null)}
+          onVerify={handleHumanCheckSuccess}
+        />
 
         <div className="ud-body">
           {tab === "home" ? <HomeTab /> : null}

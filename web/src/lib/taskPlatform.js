@@ -154,6 +154,7 @@ function normalizeTasksOverview(row) {
 function normalizeUsersOverview(row) {
   return {
     ...row,
+    phone: row.phone || "",
     tasks_claimed: toInt(row.tasks_claimed) || 0,
     tasks_submitted: toInt(row.tasks_submitted) || 0,
     tasks_completed: toInt(row.tasks_completed) || 0,

@@ -897,6 +897,7 @@ returns table (
   id uuid,
   name text,
   email text,
+  phone text,
   account_status text,
   tasks_claimed integer,
   tasks_submitted integer,
@@ -911,6 +912,7 @@ as $$
     p.id,
     p.name,
     u.email,
+    p.phone,
     p.account_status,
     count(a.id)::integer as tasks_claimed,
     coalesce(sum(case when a.state = 'submitted' then 1 else 0 end), 0)::integer as tasks_submitted,
@@ -922,7 +924,7 @@ as $$
   left join public.wallets w on w.user_id = p.id
   where public.is_admin()
     and p.role = 'user'
-  group by p.id, p.name, u.email, p.account_status, w.balance
+  group by p.id, p.name, u.email, p.phone, p.account_status, w.balance
   order by p.created_at desc;
 $$;
 
