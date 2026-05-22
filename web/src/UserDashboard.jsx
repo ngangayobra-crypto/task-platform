@@ -449,6 +449,7 @@ export default function UserDashboard({ me, onLogout }) {
   const [taskTab, setTaskTab] = useState("available");
   const [myTasks, setMyTasks] = useState([]);
   const [available, setAvailable] = useState([]);
+  const [availableError, setAvailableError] = useState("");
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [stats, setStats] = useState({
@@ -542,9 +543,12 @@ export default function UserDashboard({ me, onLogout }) {
     try {
       const rows = await listAvailableTasks();
       setAvailable(Array.isArray(rows) ? rows : []);
-      setTasksLoaded(true);
+      setAvailableError("");
     } catch (error) {
-      console.error(error);
+      setAvailable([]);
+      setAvailableError(error.message || "Could not load available tasks.");
+    } finally {
+      setTasksLoaded(true);
     }
   }, []);
 
@@ -586,6 +590,7 @@ export default function UserDashboard({ me, onLogout }) {
 
     const intervalId = window.setInterval(() => {
       void loadMyTasks();
+      void loadAvailable();
       void loadStats();
     }, 10000);
 
@@ -803,16 +808,20 @@ export default function UserDashboard({ me, onLogout }) {
           <>
             {!humanVerified ? (
               <div className="ud-claim-banner">
-                
-                
+                <div className="ud-claim-banner-title">One quick human check</div>
+                <div className="ud-claim-banner-body">
+                  The first time you tap <strong>Claim task</strong>, we will ask you to confirm
+                  you are not a bot. After that, it stays out of your way.
+                </div>
               </div>
             ) : null}
 
             {!paymentConfirmed ? (
               <div className="ud-claim-banner">
-                
+                <div className="ud-claim-banner-title">Browse first, pay only when claiming</div>
                 <div className="ud-claim-banner-body">
-                  
+                  You can explore tasks normally. The M-Pesa confirmation step only appears when
+                  you claim a task and only if your payment is still pending.
                 </div>
               </div>
             ) : null}
@@ -848,18 +857,31 @@ export default function UserDashboard({ me, onLogout }) {
                   Clear
                 </button>
               ) : null}
+              <button className="ud-chip-clear" onClick={() => void loadAvailable()}>
+                Refresh
+              </button>
             </div>
 
-            {filteredAvailable.length === 0 ? (
+            {availableError ? (
+              <div className="ud-empty">
+                <div className="ud-empty-text">Tasks could not load</div>
+                <div className="ud-empty-sub">{availableError}</div>
+                <button className="ud-btn-primary" style={{ marginTop: 12 }} onClick={() => void loadAvailable()}>
+                  Try again
+                </button>
+              </div>
+            ) : null}
+
+            {!availableError && filteredAvailable.length === 0 ? (
               <div className="ud-empty">
                 <div className="ud-empty-text">{search || filterTime ? "No matches" : "No tasks available"}</div>
                 <div className="ud-empty-sub">
                   {search || filterTime
                     ? "Try a different search or remove a filter."
-                    : "Check back soon. New tasks show up here automatically."}
+                    : "Check back soon. Open tasks show up here automatically, but tasks already assigned to someone else stay out of this list."}
                 </div>
               </div>
-            ) : (
+            ) : !availableError ? (
               filteredAvailable.map((task) => (
                 <TaskCard
                   key={task.id}
@@ -869,7 +891,7 @@ export default function UserDashboard({ me, onLogout }) {
                   onClaim={() => void handleClaimIntent(task)}
                 />
               ))
-            )}
+            ) : null}
           </>
         ) : null}
 

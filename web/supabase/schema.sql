@@ -77,6 +77,11 @@ create table if not exists public.withdrawals (
   created_at timestamptz not null default now()
 );
 
+update public.profiles
+set account_status = 'active'
+where role = 'user'
+  and account_status = 'pending';
+
 create or replace function public.is_admin(check_user uuid default auth.uid())
 returns boolean
 language sql
@@ -102,7 +107,7 @@ as $$
     select 1
     from public.profiles
     where id = check_user
-      and account_status = 'active'
+      and account_status in ('active', 'pending')
   );
 $$;
 
@@ -563,8 +568,8 @@ begin
 
   current_balance := coalesce(current_balance, 0);
 
-  if current_balance < 35 then
-    raise exception 'Withdraw unlocks at $35.';
+  if current_balance < 500 then
+    raise exception 'Withdraw unlocks at $500.';
   end if;
 
   insert into public.withdrawals (user_id, amount)
@@ -642,7 +647,7 @@ begin
     from public.profiles
     where id = p_user_id
       and role = 'user'
-      and account_status = 'active'
+      and account_status in ('active', 'pending')
       and public.has_confirmed_payment(p_user_id)
   ) then
     raise exception 'You can only assign tasks to users with confirmed payment.';
