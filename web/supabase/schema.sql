@@ -366,7 +366,7 @@ declare
   current_user_id uuid;
   current_name text;
   current_email text;
-  signup_request_id integer;
+  next_signup_request_id integer;
   existing_status text;
 begin
   current_user_id := (select auth.uid());
@@ -412,11 +412,11 @@ begin
         phone = excluded.phone,
         channel = excluded.channel,
         status = 'pending'
-  returning id into signup_request_id;
+  returning id into next_signup_request_id;
 
   insert into public.registration_payments (signup_request_id, user_id, phone, amount, mpesa_code, status, admin_note, confirmed_at)
   values (
-    signup_request_id,
+    next_signup_request_id,
     current_user_id,
     trim(p_phone),
     coalesce(p_amount, 250),
