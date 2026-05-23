@@ -393,7 +393,7 @@ function ClaimPaymentModal({ task, me, paymentStatus, submitting, onSubmit, onCl
         <h2 className="ud-payment-title">Submit your M-Pesa payment</h2>
         <p className="ud-payment-body">
           Before claiming <strong>{task.title}</strong>, send KES {REGISTRATION_FEE} to M-Pesa
-          Pochi la Biashara 0111445540, then submit the phone number and confirmation code here.
+          Send Money 0101260148, then submit the phone number and confirmation code here.
         </p>
 
         {isPending ? (
