@@ -816,26 +816,6 @@ export default function UserDashboard({ me, onLogout }) {
 
         {taskTab === "available" ? (
           <>
-            {!humanVerified ? (
-              <div className="ud-claim-banner">
-                <div className="ud-claim-banner-title">One quick human check</div>
-                <div className="ud-claim-banner-body">
-                  The first time you tap <strong>Claim task</strong>, we will ask you to confirm
-                  you are not a bot. After that, it stays out of your way.
-                </div>
-              </div>
-            ) : null}
-
-            {!paymentConfirmed ? (
-              <div className="ud-claim-banner">
-                <div className="ud-claim-banner-title">Browse first, pay only when claiming</div>
-                <div className="ud-claim-banner-body">
-                  You can explore tasks normally. The M-Pesa confirmation step only appears when
-                  you claim a task and only if your payment is still pending.
-                </div>
-              </div>
-            ) : null}
-
             <div className="ud-search-wrap">
               <Icon.search />
               <input
