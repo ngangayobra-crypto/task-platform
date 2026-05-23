@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./UserDashboard.css";
-import { REGISTRATION_FEE, TASK_REWARD, WITHDRAW_MIN } from "./lib/constants";
+import { DEFAULT_TASK_REWARD, REGISTRATION_FEE, WITHDRAW_MIN } from "./lib/constants";
 import {
   claimTask,
   getMyPaymentStatus,
@@ -82,6 +82,11 @@ const Icon = {
     </svg>
   ),
 };
+
+function getTaskReward(task) {
+  const amount = Number(task?.reward_amount);
+  return amount > 0 ? amount : DEFAULT_TASK_REWARD;
+}
 
 function OnboardingCard({ onDone }) {
   const [step, setStep] = useState(0);
@@ -186,13 +191,14 @@ function TaskCard({ task, onClaim, onSubmit, claiming, mode }) {
     mode === "available"
       ? null
       : stateLabel[task.state] || { text: task.state, cls: "ud-pill-pending" };
+  const reward = getTaskReward(task);
 
   return (
     <div className="ud-task-card">
       <div className="ud-task-header">
         <span className="ud-task-title">{task.title}</span>
         {pill ? <span className={`ud-pill ${pill.cls}`}>{pill.text}</span> : null}
-        {mode === "available" ? <span className="ud-pill ud-pill-earn">${TASK_REWARD.toFixed(2)}</span> : null}
+        <span className="ud-pill ud-pill-earn">${reward.toFixed(2)}</span>
       </div>
 
       <div className="ud-task-meta">
@@ -241,6 +247,7 @@ function TaskCard({ task, onClaim, onSubmit, claiming, mode }) {
 
 function EarningsHistory({ tasks }) {
   const earned = tasks.filter((task) => task.state === "completed");
+  const totalEarned = earned.reduce((sum, task) => sum + getTaskReward(task), 0);
 
   if (!earned.length) {
     return (
@@ -259,12 +266,12 @@ function EarningsHistory({ tasks }) {
             <div className="ud-earnings-task">{task.title}</div>
             <div className="ud-earnings-date">Task #{task.task_id}</div>
           </div>
-          <div className="ud-earnings-amount">+${TASK_REWARD.toFixed(2)}</div>
+          <div className="ud-earnings-amount">+${getTaskReward(task).toFixed(2)}</div>
         </div>
       ))}
       <div className="ud-earnings-total">
         <span>Total earned</span>
-        <span>${(earned.length * TASK_REWARD).toFixed(2)}</span>
+        <span>${totalEarned.toFixed(2)}</span>
       </div>
     </div>
   );
@@ -714,6 +721,9 @@ export default function UserDashboard({ me, onLogout }) {
   }
 
   const myTaskIds = new Set(myTasks.map((task) => task.task_id));
+  const completedRewardTotal = myTasks
+    .filter((task) => task.state === "completed")
+    .reduce((sum, task) => sum + getTaskReward(task), 0);
   const filteredAvailable = available
     .filter((task) => !myTaskIds.has(task.id))
     .filter(
@@ -928,10 +938,7 @@ export default function UserDashboard({ me, onLogout }) {
         <div className="ud-section">
           <div className="ud-section-header">
             <span className="ud-section-title">Earnings history</span>
-            <span className="ud-section-sub">
-              $
-              {(myTasks.filter((task) => task.state === "completed").length * TASK_REWARD).toFixed(2)} total
-            </span>
+            <span className="ud-section-sub">${completedRewardTotal.toFixed(2)} total</span>
           </div>
           <EarningsHistory tasks={myTasks} />
         </div>
@@ -962,7 +969,7 @@ export default function UserDashboard({ me, onLogout }) {
             <div className="ud-pstat-lbl">Tasks completed</div>
           </div>
           <div className="ud-pstat">
-            <div className="ud-pstat-num">${(stats.completed * TASK_REWARD).toFixed(2)}</div>
+            <div className="ud-pstat-num">${completedRewardTotal.toFixed(2)}</div>
             <div className="ud-pstat-lbl">Total earned</div>
           </div>
         </div>

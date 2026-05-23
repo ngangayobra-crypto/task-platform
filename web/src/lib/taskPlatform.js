@@ -1,4 +1,4 @@
-import { REGISTRATION_FEE, SUBMISSION_BUCKET } from "./constants";
+import { DEFAULT_TASK_REWARD, REGISTRATION_FEE, SUBMISSION_BUCKET } from "./constants";
 import { supabase } from "./supabase";
 
 function messageFromError(error, fallback = "Something went wrong.") {
@@ -31,6 +31,11 @@ function toInt(value) {
 
 function toMoney(value) {
   return value == null ? 0 : Number(value);
+}
+
+function normalizeReward(value) {
+  const amount = toMoney(value);
+  return amount > 0 ? amount : DEFAULT_TASK_REWARD;
 }
 
 function delay(ms) {
@@ -104,6 +109,7 @@ function normalizeAvailableTask(row) {
     ...row,
     id: toInt(row.id),
     estimated_minutes: toInt(row.estimated_minutes),
+    reward_amount: normalizeReward(row.reward_amount),
   };
 }
 
@@ -113,6 +119,7 @@ function normalizeMyTask(row) {
     assignment_id: toInt(row.assignment_id),
     task_id: toInt(row.task_id),
     estimated_minutes: toInt(row.estimated_minutes),
+    reward_amount: normalizeReward(row.reward_amount),
   };
 }
 
@@ -139,6 +146,7 @@ function normalizeSubmission(row) {
     submission_id: toInt(row.submission_id),
     assignment_id: toInt(row.assignment_id),
     task_id: toInt(row.task_id),
+    reward_amount: normalizeReward(row.reward_amount),
   };
 }
 
@@ -148,6 +156,7 @@ function normalizeTasksOverview(row) {
     id: toInt(row.id),
     estimated_minutes: toInt(row.estimated_minutes),
     claim_count: toInt(row.claim_count) || 0,
+    reward_amount: normalizeReward(row.reward_amount),
   };
 }
 
@@ -299,12 +308,13 @@ export async function requestWithdrawal() {
   };
 }
 
-export async function createTask({ title, description, dueDate, estimatedMinutes }) {
+export async function createTask({ title, description, dueDate, estimatedMinutes, rewardAmount }) {
   const id = await rpcSingle("create_task", {
     p_title: title,
     p_description: description,
     p_due_date: dueDate || null,
     p_estimated_minutes: estimatedMinutes || null,
+    p_reward_amount: Number(rewardAmount),
   });
 
   return toInt(id);

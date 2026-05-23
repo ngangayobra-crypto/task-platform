@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./AdminDashboard.css";
-import { TASK_REWARD } from "./lib/constants";
+import { DEFAULT_TASK_REWARD } from "./lib/constants";
 import {
   approveAssignmentStart,
   assignTask,
@@ -284,6 +284,7 @@ function TasksTab({ addToast }) {
     description: "",
     due_date: "",
     estimated_minutes: "",
+    reward_amount: String(DEFAULT_TASK_REWARD),
   });
 
   const loadTasks = useCallback(async () => {
@@ -317,6 +318,13 @@ function TasksTab({ addToast }) {
       return;
     }
 
+    const rewardAmount = Number(form.reward_amount);
+
+    if (!Number.isFinite(rewardAmount) || rewardAmount <= 0) {
+      addToast("Reward amount must be greater than zero.", "error");
+      return;
+    }
+
     setCreating(true);
 
     try {
@@ -325,6 +333,7 @@ function TasksTab({ addToast }) {
         description: form.description.trim(),
         dueDate: form.due_date || null,
         estimatedMinutes: form.estimated_minutes ? Number(form.estimated_minutes) : null,
+        rewardAmount,
       });
       addToast("Task created.", "success");
       setForm({
@@ -332,6 +341,7 @@ function TasksTab({ addToast }) {
         description: "",
         due_date: "",
         estimated_minutes: "",
+        reward_amount: String(DEFAULT_TASK_REWARD),
       });
       setView("list");
       await loadTasks();
@@ -356,12 +366,13 @@ function TasksTab({ addToast }) {
     }
   }
 
-  async function handleReviewSubmission(submissionId, status) {
+  async function handleReviewSubmission(submission, status) {
     try {
-      await reviewSubmission(submissionId, status);
+      await reviewSubmission(submission.submission_id, status);
+      const rewardAmount = Number(submission.reward_amount || DEFAULT_TASK_REWARD);
       addToast(
         status === "approved"
-          ? `Submission approved and $${TASK_REWARD.toFixed(2)} paid.`
+          ? `Submission approved and $${rewardAmount.toFixed(2)} paid.`
           : "Submission rejected.",
         status === "approved" ? "success" : "warn",
       );
@@ -444,6 +455,23 @@ function TasksTab({ addToast }) {
                 }
               />
             </div>
+            <div className="ad-field">
+              <label className="ad-label">Reward ($)</label>
+              <input
+                className="ad-input"
+                type="number"
+                min="0.01"
+                step="0.01"
+                placeholder={String(DEFAULT_TASK_REWARD)}
+                value={form.reward_amount}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    reward_amount: event.target.value,
+                  }))
+                }
+              />
+            </div>
           </div>
           <button className="ad-btn-primary" disabled={creating} onClick={handleCreateTask}>
             {creating ? "Creating..." : (
@@ -508,6 +536,13 @@ function TasksTab({ addToast }) {
                 <div className="ad-card-task-name">{submission.task_title}</div>
               ) : null}
 
+              <div className="ad-meta-row">
+                <span className="ad-pill ad-pill-amber">${Number(submission.reward_amount).toFixed(2)} reward</span>
+                {submission.task_due_date ? (
+                  <span className="ad-pill ad-pill-gray">Due {submission.task_due_date}</span>
+                ) : null}
+              </div>
+
               {submission.text ? (
                 <div className="ad-submission-text">"{submission.text}"</div>
               ) : null}
@@ -525,13 +560,13 @@ function TasksTab({ addToast }) {
                 <div className="ad-action-row">
                   <button
                     className="ad-btn-approve"
-                    onClick={() => void handleReviewSubmission(submission.submission_id, "approved")}
+                    onClick={() => void handleReviewSubmission(submission, "approved")}
                   >
                     <Icon.check /> Approve
                   </button>
                   <button
                     className="ad-btn-reject"
-                    onClick={() => void handleReviewSubmission(submission.submission_id, "rejected")}
+                    onClick={() => void handleReviewSubmission(submission, "rejected")}
                   >
                     <Icon.close /> Reject
                   </button>
@@ -592,6 +627,7 @@ function TasksTab({ addToast }) {
 
             <div className="ad-meta-row">
               <span className="ad-pill ad-pill-gray">#{task.id}</span>
+              <span className="ad-pill ad-pill-amber">${Number(task.reward_amount).toFixed(2)} reward</span>
               {task.due_date ? <span className="ad-pill ad-pill-gray">Due {task.due_date}</span> : null}
               {task.estimated_minutes ? (
                 <span className="ad-pill ad-pill-gray">
@@ -744,7 +780,7 @@ function UsersTab({ addToast }) {
               <option value="">Select a task</option>
               {assignableTasks.map((task) => (
                 <option key={task.id} value={task.id}>
-                  #{task.id} - {task.title}
+                  #{task.id} - {task.title} (${Number(task.reward_amount).toFixed(2)})
                 </option>
               ))}
             </select>
