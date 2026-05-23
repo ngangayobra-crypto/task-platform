@@ -40,6 +40,7 @@ After that, sign in through the website and use the admin dashboard for the rest
 - For instant register-and-login, turn off Confirm email in your Supabase Auth dashboard. Supabase documents that `signUp()` only returns a live session when email confirmations are disabled.
 - After sign-in, non-admin users can browse tasks immediately. The M-Pesa prompt appears when they claim a task, and withdrawals unlock at $500 after earnings build up.
 - Admins now set each task's reward manually when creating the task, and approved submissions pay that exact task amount into the user's wallet.
+- Open tasks stay visible to every user and can be claimed by different users; each user can only hold one assignment for the same task.
 - Re-run [supabase/schema.sql](/C:/Users/brayo/OneDrive/Desktop/task-platform/web/supabase/schema.sql) if you have an older Supabase setup from the previous approval-based flow.
 - Submission uploads go to the private `submission-files` storage bucket defined in the schema.
 - The old Node/SQLite backend is no longer used by the website.

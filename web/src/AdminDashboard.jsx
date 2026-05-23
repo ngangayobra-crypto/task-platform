@@ -749,7 +749,7 @@ function UsersTab({ addToast }) {
     }
   }
 
-  const assignableTasks = tasks.filter((task) => task.status === "open" && task.claim_count === 0);
+  const assignableTasks = tasks.filter((task) => task.status === "open");
   const assignableUsers = users.filter((user) => user.account_status !== "rejected");
 
   return (

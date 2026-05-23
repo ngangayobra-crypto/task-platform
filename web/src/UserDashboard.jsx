@@ -187,17 +187,27 @@ function TaskCard({ task, onClaim, onSubmit, claiming, mode }) {
     reviewed: { text: "Reviewed", cls: "ud-pill-done" },
   };
 
-  const pill =
-    mode === "available"
-      ? null
-      : stateLabel[task.state] || { text: task.state, cls: "ud-pill-pending" };
+  const pill = stateLabel[task.state] || { text: task.state, cls: "ud-pill-pending" };
   const reward = getTaskReward(task);
+  const alreadyHasTask = mode === "available" && Boolean(task.state);
+
+  const claimLabel = alreadyHasTask
+    ? {
+        claimed: "Waiting approval",
+        assigned: "In my tasks",
+        submitted: "Submitted",
+        reviewed: "Submitted",
+        completed: "Completed",
+      }[task.state] || "Already claimed"
+    : claiming
+      ? "Claiming..."
+      : "Claim task";
 
   return (
     <div className="ud-task-card">
       <div className="ud-task-header">
         <span className="ud-task-title">{task.title}</span>
-        {pill ? <span className={`ud-pill ${pill.cls}`}>{pill.text}</span> : null}
+        {mode !== "available" || alreadyHasTask ? <span className={`ud-pill ${pill.cls}`}>{pill.text}</span> : null}
         <span className="ud-pill ud-pill-earn">${reward.toFixed(2)}</span>
       </div>
 
@@ -219,8 +229,8 @@ function TaskCard({ task, onClaim, onSubmit, claiming, mode }) {
       ) : null}
 
       {mode === "available" ? (
-        <button className="ud-btn-primary ud-btn-sm" disabled={claiming} onClick={onClaim}>
-          {claiming ? "Claiming..." : "Claim task"}
+        <button className="ud-btn-primary ud-btn-sm" disabled={claiming || alreadyHasTask} onClick={onClaim}>
+          {claimLabel}
         </button>
       ) : null}
 
@@ -720,12 +730,11 @@ export default function UserDashboard({ me, onLogout }) {
     setTaskTab("available");
   }
 
-  const myTaskIds = new Set(myTasks.map((task) => task.task_id));
+  const myTaskById = new Map(myTasks.map((task) => [task.task_id, task]));
   const completedRewardTotal = myTasks
     .filter((task) => task.state === "completed")
     .reduce((sum, task) => sum + getTaskReward(task), 0);
   const filteredAvailable = available
-    .filter((task) => !myTaskIds.has(task.id))
     .filter(
       (task) =>
         !search ||
@@ -804,8 +813,8 @@ export default function UserDashboard({ me, onLogout }) {
             onClick={() => setTaskTab("available")}
           >
             Available
-            {available.filter((task) => !myTaskIds.has(task.id)).length > 0 ? (
-              <span className="ud-subtab-badge">{available.filter((task) => !myTaskIds.has(task.id)).length}</span>
+            {available.length > 0 ? (
+              <span className="ud-subtab-badge">{available.length}</span>
             ) : null}
           </button>
           <button className={`ud-subtab ${taskTab === "mine" ? "active" : ""}`} onClick={() => setTaskTab("mine")}>
@@ -868,14 +877,14 @@ export default function UserDashboard({ me, onLogout }) {
                 <div className="ud-empty-sub">
                   {search || filterTime
                     ? "Try a different search or remove a filter."
-                    : "Check back soon. Open tasks show up here automatically, but tasks already assigned to someone else stay out of this list."}
+                    : "Check back soon. Open tasks stay visible here for everyone and can be claimed by different users."}
                 </div>
               </div>
             ) : !availableError ? (
               filteredAvailable.map((task) => (
                 <TaskCard
                   key={task.id}
-                  task={task}
+                  task={{ ...task, state: myTaskById.get(task.id)?.state }}
                   mode="available"
                   claiming={Boolean(claimingIds[task.id])}
                   onClaim={() => void handleClaimIntent(task)}
