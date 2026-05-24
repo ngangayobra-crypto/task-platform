@@ -27,7 +27,7 @@ create table if not exists public.registration_payments (
   signup_request_id integer not null unique references public.signup_requests (id) on delete cascade,
   user_id uuid not null references public.profiles (id) on delete cascade,
   phone text not null,
-  amount double precision not null default 250,
+  amount double precision not null default 50,
   mpesa_code text not null unique,
   status text not null default 'pending' check (status in ('pending', 'confirmed', 'rejected')),
   admin_note text,
@@ -373,7 +373,7 @@ $$;
 create or replace function public.submit_my_registration_payment(
   p_phone text,
   p_mpesa_code text,
-  p_amount double precision default 250,
+  p_amount double precision default 50,
   p_channel text default 'sms'
 )
 returns boolean
@@ -438,7 +438,7 @@ begin
     next_signup_request_id,
     current_user_id,
     trim(p_phone),
-    coalesce(p_amount, 250),
+    coalesce(p_amount, 50),
     upper(trim(p_mpesa_code)),
     'pending',
     null,
